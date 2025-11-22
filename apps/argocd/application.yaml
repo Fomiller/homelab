@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/Fomiller/homelab.git
-    targetRevision: main
+    targetRevision: master
     path: charts/argo-cd
     helm:
       valueFiles:
