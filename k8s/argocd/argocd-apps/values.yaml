@@ -11,14 +11,14 @@ applicationsets:
       metadata:
         name: '{{path.basenameNormalized}}'
       spec:
-        project: default
+        project: '{{path.basenameNormalized}}'
         source:
           repoURL: https://github.com/Fomiller/homelab.git
           targetRevision: main
           path: '{{path}}'
         destination:
-          name: in-cluster
-          namespace: '{{path[1]}}'
+          name: homelab
+          namespace: '{{path.basenameNormalized}}'
         syncPolicy:
           automated:
             selfHeal: true
