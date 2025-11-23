@@ -1,3 +1,15 @@
+projects:
+  homelab:
+    description: "Project for my homelab applications"
+    sourceRepos:
+      - "https://github.com/Fomiller/homelab"
+    destinations:
+      - namespace: "*"
+        server: "https://kubernetes.default.svc"
+    clusterResourceWhitelist:
+      - group: "*"
+        kind: "*"
+
 applicationsets:
   main:
     name: main
@@ -11,7 +23,7 @@ applicationsets:
       metadata:
         name: '{{path.basenameNormalized}}'
       spec:
-        project: '{{path.basenameNormalized}}'
+        project: homelab
         source:
           repoURL: https://github.com/Fomiller/homelab.git
           targetRevision: main
