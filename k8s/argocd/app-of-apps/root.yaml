@@ -9,7 +9,7 @@ spec:
         repoURL: https://github.com/Fomiller/homelab
         revision: main
         directories:
-          - path: argocd/apps/*
+          - path: k8s/apps/*
   template:
     metadata:
       name: '{{path.basename}}'
