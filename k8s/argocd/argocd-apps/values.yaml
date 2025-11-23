@@ -1,0 +1,25 @@
+applicationsets:
+  main:
+    name: main
+    generators:
+      - git:
+          repoURL: https://github.com/Fomiller/homelab.git
+          revision: main
+          directories:
+            - path: k8s/**/*
+    template:
+      metadata:
+        name: '{{path[1]}}-{{path.basenameNormalized}}'
+      spec:
+        project: default
+        source:
+          repoURL: https://github.com/Fomiller/homelab.git
+          targetRevision: main
+          path: '{{path}}'
+        destination:
+          name: in-cluster
+          namespace: '{{path[1]}}'
+        syncPolicy:
+          automated:
+            selfHeal: true
+            prune: true
