@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab-applicationset
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/Fomiller/homelab.git
+        revision: main
+        directories:
+          - path: apps/*   # matches each subdirectory under apps/
+  template:
+    metadata:
+      name: '{{path.basename}}'   # Application name = directory name
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Fomiller/homelab.git
+        targetRevision: main
+        path: '{{path}}'           # path to the directory with kustomization.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'  # deploy each app to its own namespace
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
