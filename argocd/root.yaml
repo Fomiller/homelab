@@ -1,20 +1,32 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
-  name: root
+  name: root-applications
   namespace: argocd
 spec:
-  project: default
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: argocd
-  source:
-    repoURL: https://github.com/Fomiller/homelab
-    targetRevision: main
-    path: argocd/apps
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+  generators:
+    - git:
+        repoURL: https://github.com/Fomiller/homelab
+        revision: main
+        directories:
+          - path: argocd/apps/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Fomiller/homelab
+        targetRevision: main
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
