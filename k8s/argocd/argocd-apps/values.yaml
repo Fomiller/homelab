@@ -9,7 +9,7 @@ applicationsets:
             - path: k8s/**/*
     template:
       metadata:
-        name: '{{path[1]}}-{{path.basenameNormalized}}'
+        name: '{{path.basenameNormalized}}'
       spec:
         project: default
         source:
