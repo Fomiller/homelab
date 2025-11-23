@@ -29,8 +29,8 @@ applicationsets:
           targetRevision: main
           path: '{{path}}'
         destination:
-          name: homelab
-          namespace: '{{path.basenameNormalized}}'
+          name: in-cluster
+          namespace: argocd
         syncPolicy:
           automated:
             selfHeal: true
