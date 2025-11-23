@@ -1,6 +1,3 @@
-global:
-  domain: "argocd.fomiller.com"
-
 configs:
   params:
     server.insecure: true
