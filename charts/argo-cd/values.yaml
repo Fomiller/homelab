@@ -170,6 +170,7 @@ configs:
   # General Argo CD configuration. Any values you put under `.configs.cm` are passed to argocd-cm ConfigMap.
   ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
   cm:
+    kustomize.buildOptions: --enable-helm
     # -- Create the argocd-cm configmap for [declarative setup]
     create: true
 
