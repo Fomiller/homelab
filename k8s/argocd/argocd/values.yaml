@@ -1,6 +1,9 @@
-  configs:
-    # params:
-    #   server.insecure: true
+configs:
+    params:
+      server.insecure: true
     cm:
       kustomize.buildOptions: --enable-helm
+
+controller:
+  appResyncPeriod: 3m
 
