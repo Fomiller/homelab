@@ -1,0 +1,43 @@
+# .github/workflows/deploy.yml
+
+name: 'Terragrunt Deploy'
+  
+on:
+  push:
+    paths:
+      - '.github/**'
+      - 'infra/**'
+      - 'justfile'
+   
+jobs:
+  Pre-check:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: 'true'
+          concurrent_skipping: 'same_content_newer'
+            
+  Deploy-infra:
+    name: 'Deploy Infra'
+    needs: Pre-check
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
+    with:
+      environment: dev
+      infra-dir: infra/modules/aws
+      doppler-project: homelab
+    secrets: inherit
+    
+    # use if you need to debug workflow
+    # - name: DEBUG
+    #   uses: lhotari/action-upterm@v1
+    #   with:
+    #       limit-access-to-actor: true
+    #       limit-access-to-users: Fomiller
+
+      
+
