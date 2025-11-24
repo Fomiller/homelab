@@ -4,9 +4,9 @@ kind: Kustomization
 namespace: kubesystem
 
 helmCharts:
-- name: aws-eks-pod-identity-webhook
+- name: amazon-eks-pod-identity-webhook
   repo: https://jkroepke.github.io/helm-charts/
   version: 2.5.6
-  releaseName: aws-eks-pod-identity-webhook
+  releaseName: amazon-eks-pod-identity-webhook
   namespace: kube-system
   valuesFile: values.yaml
