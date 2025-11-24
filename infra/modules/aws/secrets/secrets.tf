@@ -11,3 +11,17 @@ resource "aws_secretsmanager_secret_version" "doppler_operator_creds" {
     }
   ))
 }
+
+resource "aws_secretsmanager_secret" "tailscale_operator_creds" {
+  name       = "${var.environment}/${var.namespace}/${var.app_prefix}/tailscale-operator-creds"
+  kms_key_id = data.aws_kms_key.fomiller_master.id
+}
+
+resource "aws_secretsmanager_secret_version" "tailscale_operator_creds" {
+  secret_id = aws_secretsmanager_secret.tailscale_operator_creds.id
+  secret_string = jsonencode(tomap({
+    "client_id"     = var.tailscale_operator_client_id
+    "client_secret" = var.tailscale_operator_client_secret
+    }
+  ))
+}
