@@ -1,9 +1,9 @@
 data "tls_certificate" "open_id_connect_talos" {
-  url = "https://${var.s3_bucket_name_homelab_oidc}/.well-known/openid-configuration"
+  url = "https://${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com/.well-known/openid-configuration"
 }
 
 resource "aws_iam_openid_connect_provider" "talos" {
-  url             = "https://${var.s3_bucket_name_homelab_oidc}"
+  url             = "https://${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com"
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.open_id_connect_talos.certificates[0].sha1_fingerprint]
 }
