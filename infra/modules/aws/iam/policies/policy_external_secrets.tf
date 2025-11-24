@@ -48,4 +48,3 @@ resource "aws_iam_policy" "external_secrets" {
   name   = "${title(var.namespace)}ExternalSecretsPolicy"
   policy = data.aws_iam_policy_document.external_secrets.json
 }
-

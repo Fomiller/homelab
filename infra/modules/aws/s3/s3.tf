@@ -45,3 +45,18 @@ resource "aws_s3_bucket_acl" "talos_irsa" {
   bucket = aws_s3_bucket.talos_irsa.id
   acl    = "public-read"
 }
+
+resource "aws_s3_object" "talos_irsa_keys_json" {
+  bucket = aws_s3_bucket.talos_irsa.id
+  key     = "keys.json"
+  content = jsonencode(var.oidc_keys)
+  acl = "public-read"
+}
+
+resource "aws_s3_object" "talos_irsa_openid_configuration" {
+  bucket = aws_s3_bucket.talos_irsa.id
+  key     = ".well-known/openid-configuration"
+  content = jsonencode(var.oidc_openid_configuration)
+  acl = "public-read"
+}
+

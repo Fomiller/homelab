@@ -1,5 +1,5 @@
 output "iam_role_name_external_secrets" {
-  value = aws_iam_role.external_secrets.name
+  value = aws_iam_role.external_secrets_irsa.name
 }
 
 output "iam_role_name_doppler_operator" {
