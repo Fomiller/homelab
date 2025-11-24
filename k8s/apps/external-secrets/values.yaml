@@ -1,0 +1,11 @@
+replicaCount: 1
+
+serviceAccount:
+  create: true
+  name: external-secrets
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::695434033664/role/FomillerExternalSecretsOperator
+
+controller:
+  metrics:
+    enabled: true
