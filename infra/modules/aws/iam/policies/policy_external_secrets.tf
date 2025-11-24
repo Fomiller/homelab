@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "external_secrets" {
     ]
 
     resources = [
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
+      "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:*"
     ]
   }
 
@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "external_secrets" {
     ]
 
     resources = [
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
+      "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:*"
     ]
   }
 }
