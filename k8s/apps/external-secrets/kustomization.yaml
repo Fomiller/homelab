@@ -13,3 +13,15 @@ helmCharts:
   releaseName: external-secrets
   includeCRDs: true
   valuesFile: values.yaml
+
+patches:
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: secretstores.external-secrets.io
+  path: secretstores.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: clustersecretstores.external-secrets.io
+  path: clustersecretstores.crd.patch.yaml
