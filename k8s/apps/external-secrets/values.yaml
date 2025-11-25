@@ -49,9 +49,9 @@ crds:
 #   # -- If true, create CRDs for Push Secret.
   createPushSecret: true
 #   annotations: {}
-  conversion:
+  # conversion:
 #     # -- Conversion is disabled by default as we stopped supporting v1alpha1.
-    enabled: false
+    # enabled: false
 #
 # imagePullSecrets: []
 # nameOverride: ""
@@ -361,11 +361,11 @@ serviceMonitor:
 # # -- Run the controller on the host network
 # hostNetwork: false
 #
-webhook:
+# webhook:
 #   # -- Annotations to place on validating webhook configuration.
 #   annotations: {}
 #   # -- Specifies whether a webhook deployment be created. If set to false, crds.conversion.enabled should also be set to false otherwise the kubeapi will be hammered because the conversion is looking for a webhook endpoint.
-  create: false
+  # create: false
 #   # -- Specifies the time to check if the cert is valid
 #   certCheckInterval: "5m"
 #   # -- Specifies the lookaheadInterval for certificate validity
@@ -407,12 +407,12 @@ webhook:
 #     name: ""
 #   nodeSelector: {}
 #
-  certManager:
+  # certManager:
     # -- Enabling cert-manager support will disable the built in secret and
     # switch to using cert-manager (installed separately) to automatically issue
     # and renew the webhook certificate. This chart does not install
     # cert-manager for you, See https://cert-manager.io/docs/
-    enabled: false
+    # enabled: false
 #     # -- Automatically add the cert-manager.io/inject-ca-from annotation to the
 #     # webhooks and CRDs. As long as you have the cert-manager CA Injector
 #     # enabled, this will automatically setup your webhook's CA to the one used
@@ -549,9 +549,9 @@ webhook:
 #     # Check the documentation of your load balancer provider to see if/how this should be used.
 #     loadBalancerIP: ""
 #
-certController:
+# certController:
 #   # -- Specifies whether a certificate controller deployment be created.
-  create: false
+  # create: false
 #   requeueInterval: "5m"
 #   replicaCount: 1
 #   # -- Specifies Log Params to the Certificate Controller
