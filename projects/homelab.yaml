@@ -36,33 +36,15 @@ spec:
   generators:
   - git:
       files:
-      - path: apps/**/homelab/config.json
+      - path: k8s/apps/**/config.json
       repoURL: https://github.com/Fomiller/homelab.git
       requeueAfterSeconds: 20
-      revision: argocd-bootstrap
+      revision: main
       template:
         metadata: {}
         spec:
           destination: {}
           project: ""
-  - git:
-      files:
-      - path: apps/**/homelab/config_dir.json
-      repoURL: https://github.com/Fomiller/homelab.git
-      requeueAfterSeconds: 20
-      revision: argocd-bootstrap
-      template:
-        metadata: {}
-        spec:
-          destination: {}
-          project: ""
-          source:
-            directory:
-              exclude: '{{ exclude }}'
-              include: '{{ include }}'
-              jsonnet: {}
-              recurse: true
-            repoURL: ""
   syncPolicy: {}
   template:
     metadata:
