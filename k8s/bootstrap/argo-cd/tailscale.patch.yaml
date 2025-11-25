@@ -6,3 +6,4 @@ metadata:
   annotations:
     tailscale.com/expose: "true"
     tailscale.com/hostname: "argocd"
+    tailscale.com/https: "true"
