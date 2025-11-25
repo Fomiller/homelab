@@ -21,3 +21,8 @@ configMapGenerator:
         name: autopilot-secret
   - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
   
+patches:
+  - path: tailscale.patch.yaml
+    target:
+      kind: Service
+      name: argocd-server
