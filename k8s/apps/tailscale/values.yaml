@@ -67,7 +67,8 @@
 #
 #   podSecurityContext: {}
 #
-#   securityContext: {}
+securityContext:
+  privileged: false
 #
 #   extraEnv: []
 #   # - name: EXTRA_VAR1
