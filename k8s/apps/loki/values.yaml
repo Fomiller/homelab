@@ -48,7 +48,8 @@ deploymentMode: SingleBinary
 
 singleBinary:
   replicas: 1
-  # persistence:
+  persistence:
+    enabled: false
   #   storageClass: gp2
   #   accessModes:
   #     - ReadWriteOnce
