@@ -39,3 +39,25 @@ resource "aws_iam_role" "external_secrets_irsa" {
   })
 }
 
+resource "aws_iam_role" "loki_irsa" {
+  name               = "${title(var.namespace)}LokiS3Access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:aud": "sts.amazonaws.com",
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": "system:serviceaccount:monitoring:loki"
+          }
+        }
+      }
+    ]
+  })
+}

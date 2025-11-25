@@ -1,23 +1,60 @@
 loki:
-  auth_enabled: false
-  commonConfig:
-    replication_factor: 1
-
-  deploymentMode: SingleBinary
-
-  singleBinary:
-    replicas: 1
-
-  gateway:
-    enabled: false
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+          
+  pattern_ingester:
+      enabled: true
     
-storage:
-  type: filesystem
-  filesystem:
-    chunks_directory: /var/loki/chunks
-    rules_directory: /var/loki/rules
+  limits_config:
+    allow_structured_metadata: true
+    volume_enabled: true
+    retention_period: 672h # 28 days retention
+    
+  querier:
+    max_concurrent: 4
+
+  storage:
+    type: s3
+    bucketNames:
+        chunks: fomiller-dev-homelab-loki-chunks
+        ruler: fomiller-dev-homelab-loki-ruler
+        admin: fomiller-dev-homelab-loki-admin
+    s3:
+      region: us-east-1
+      # Forces the path style for S3 (true/false)
+      s3ForcePathStyle: false
+      # Allows insecure (HTTP) connections (true/false)
+      insecure: false
+      # HTTP configuration settings
+      http_config: {}
 
 
+serviceAccount:
+  create: true
+  name: loki
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerLokiS3AccessRole
+
+deploymentMode: SimpleScalable
+
+backend:
+  replicas: 1
+read:
+  replicas: 1
+write:
+  replicas: 1
+
+# Disable minio storage
+minio:
+  enabled: false
+  
 # # -- Overrides the version used to determine compatibility of resources with the target Kubernetes cluster.
 # # This is useful when using `helm template`, because then helm will use the client version of kubectl as the Kubernetes version,
 # # which may or may not match your cluster's server version. Example: 'v1.24.4'. Set to null to use the version that helm

@@ -60,3 +60,32 @@ resource "aws_s3_object" "talos_irsa_openid_configuration" {
   acl = "public-read"
 }
 
+resource "aws_s3_bucket" "loki_chunks" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-chunks"
+    
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
+
+resource "aws_s3_bucket" "loki_ruler" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-ruler"
+    
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
+
+resource "aws_s3_bucket" "loki_admin" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-admin"
+    
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
