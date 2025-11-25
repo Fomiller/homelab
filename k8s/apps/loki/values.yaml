@@ -3,12 +3,6 @@ loki:
   commonConfig:
     replication_factor: 1
 
-  storage:
-    type: filesystem
-    filesystem:
-      chunks_directory: /var/loki/chunks
-      rules_directory: /var/loki/rules
-
   deploymentMode: SingleBinary
 
   singleBinary:
@@ -16,6 +10,13 @@ loki:
 
   gateway:
     enabled: false
+    
+storage:
+  type: filesystem
+  filesystem:
+    chunks_directory: /var/loki/chunks
+    rules_directory: /var/loki/rules
+
 
 # # -- Overrides the version used to determine compatibility of resources with the target Kubernetes cluster.
 # # This is useful when using `helm template`, because then helm will use the client version of kubectl as the Kubernetes version,
