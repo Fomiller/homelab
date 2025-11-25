@@ -22,7 +22,7 @@ spec:
   source:
     path: k8s/projects
     repoURL: https://github.com/Fomiller/homelab.git
-    targetRevision: argocd-bootstrap
+    targetRevision: main
   syncPolicy:
     automated:
       allowEmpty: true

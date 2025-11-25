@@ -39,7 +39,7 @@ spec:
       - path: k8s/apps/**/config.json
       repoURL: https://github.com/Fomiller/homelab.git
       requeueAfterSeconds: 20
-      revision: argocd-bootstrap
+      revision: main
       template:
         metadata: {}
         spec:
