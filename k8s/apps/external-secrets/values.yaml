@@ -37,17 +37,17 @@ global:
 # # -- If set, install and upgrade CRDs through helm chart.
 # installCRDs: true
 #
-# crds:
+crds:
 #   # -- If true, create CRDs for Cluster External Secret.
-#   createClusterExternalSecret: true
+  createClusterExternalSecret: true
 #   # -- If true, create CRDs for Cluster Secret Store.
-#   createClusterSecretStore: true
+  createClusterSecretStore: true
 #   # -- If true, create CRDs for Cluster Generator.
-#   createClusterGenerator: true
+  createClusterGenerator: true
 #   # -- If true, create CRDs for Cluster Push Secret.
-#   createClusterPushSecret: true
+  createClusterPushSecret: true
 #   # -- If true, create CRDs for Push Secret.
-#   createPushSecret: true
+  createPushSecret: true
 #   annotations: {}
 #   conversion:
 #     # -- Conversion is disabled by default as we stopped supporting v1alpha1.
