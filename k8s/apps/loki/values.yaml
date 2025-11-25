@@ -36,7 +36,6 @@ loki:
       insecure: false
       # HTTP configuration settings
       http_config: {}
-      
   persistence:
     enabled: false
 
@@ -47,12 +46,12 @@ minio:
 deploymentMode: SingleBinary
 
 singleBinary:
-  replicas: 3
-  persistence:
-    storageClass: gp2
-    accessModes:
-      - ReadWriteOnce
-    size: 30Gi
+  replicas: 1
+  # persistence:
+  #   storageClass: gp2
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   size: 30Gi
 
 # Zero out replica counts of other deployment modes
 backend:
