@@ -30,8 +30,8 @@ resource "aws_iam_role" "external_secrets_irsa" {
         }
         Condition = {
           StringEquals = {
-            "${var.s3_bucket_name_homelab_oidc}:aud": "sts.amazonaws.com",
-            "${var.s3_bucket_name_homelab_oidc}:sub": "system:serviceaccount:external-secrets:external-secrets"
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:aud": "sts.amazonaws.com",
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": "system:serviceaccount:external-secrets:external-secrets"
           }
         }
       }

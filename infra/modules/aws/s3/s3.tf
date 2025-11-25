@@ -48,7 +48,7 @@ resource "aws_s3_bucket_acl" "talos_irsa" {
 
 resource "aws_s3_object" "talos_irsa_keys_json" {
   bucket = aws_s3_bucket.talos_irsa.id
-  key     = "keys.json"
+  key     = ".well-known/jwks.json"
   content = var.oidc_keys
   acl = "public-read"
 }
