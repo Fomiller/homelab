@@ -12,7 +12,6 @@ configMapGenerator:
   behavior: merge
   literals:
   - |
-    kustomization.buildOptions: --enable-helm
     repository.credentials=- passwordSecret:
         key: git_token
         name: autopilot-secret
@@ -20,4 +19,5 @@ configMapGenerator:
       usernameSecret:
         key: git_username
         name: autopilot-secret
+  - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
   
