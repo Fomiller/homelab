@@ -26,7 +26,7 @@ resource "aws_iam_role" "external_secrets_irsa" {
         Effect = "Allow"
         Sid    = ""
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.s3_bucket_name_homelab_oidc}"
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com"
         }
         Condition = {
           StringEquals = {
