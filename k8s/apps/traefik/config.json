@@ -1,0 +1,11 @@
+{
+  "appName": "traefik",
+  "userGivenName": "traefik",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/traefik",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
