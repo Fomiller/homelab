@@ -1,0 +1,11 @@
+{
+  "appName": "grafana",
+  "userGivenName": "grafana",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/grafana",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
