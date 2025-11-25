@@ -1,0 +1,11 @@
+{
+  "appName": "doppler",
+  "userGivenName": "doppler",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/doppler",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "argocd-bootstrap",
+  "labels": null,
+  "annotations": null
+}

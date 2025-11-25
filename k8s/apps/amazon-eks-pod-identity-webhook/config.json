@@ -1,0 +1,11 @@
+{
+  "appName": "amazon-eks-pod-identity-webhook",
+  "userGivenName": "amazon-eks-pod-identity-webhook",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/amazon-eks-pod-identity-webhook",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "argocd-bootstrap",
+  "labels": null,
+  "annotations": null
+}
