@@ -6,5 +6,6 @@ namespace: doppler-operator-system
 helmCharts:
 - name: doppler-kubernetes-operator
   repo: https://helm.doppler.com
+  includeCRDs: true
   version: 1.5.7
   valuesFile: values.yaml

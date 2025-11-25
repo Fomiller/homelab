@@ -9,4 +9,5 @@ helmCharts:
   version: 2.5.6
   releaseName: amazon-eks-pod-identity-webhook
   namespace: kube-system
+  includeCRDs: true
   valuesFile: values.yaml

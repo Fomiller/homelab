@@ -11,4 +11,5 @@ helmCharts:
   repo: https://charts.external-secrets.io
   version: 0.19.2
   releaseName: external-secrets
+  includeCRDs: true
   valuesFile: values.yaml
