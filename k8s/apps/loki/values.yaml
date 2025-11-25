@@ -36,6 +36,9 @@ loki:
       insecure: false
       # HTTP configuration settings
       http_config: {}
+      
+  persistence:
+    enabled: false
 
 # Disable minio storage
 minio:
@@ -78,8 +81,20 @@ bloomCompactor:
 bloomGateway:
   replicas: 0
 
-persistence:
-  enabled: false
+
+chunksCache:
+  resources:
+    requests:
+      memory: .5Gi
+    limits:
+      memory: 1Gi
+      
+resultsCache:
+  resources:
+    requests:
+      memory: .5Gi
+    limits:
+      memory: 1Gi
   
 # SCALABLE *********
 # loki:
