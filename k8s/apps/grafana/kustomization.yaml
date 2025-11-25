@@ -8,6 +8,7 @@ namespace: grafana
 
 helmCharts:
 - name: grafana
+  releaseName: grafana
   repo: https://grafana.github.io/helm-charts
   includeCRDs: true
   version: 10.2.0
