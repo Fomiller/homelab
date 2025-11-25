@@ -1,3 +1,20 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+singleBinary:
+  replicas: 1
+
+gateway:
+  enabled: false
+
 # # yaml-language-server: $schema=values.schema.json
 # # Default values for prometheus.
 # # This is a YAML-formatted file.
