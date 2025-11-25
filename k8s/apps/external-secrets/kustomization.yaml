@@ -19,9 +19,9 @@ patches:
     version: v1
     kind: CustomResourceDefinition
     name: secretstores.external-secrets.io
-  path: secretstores.crd.patch.yaml
+  path: secretstores.patch.yaml
 - target:
     version: v1
     kind: CustomResourceDefinition
     name: clustersecretstores.external-secrets.io
-  path: clustersecretstores.crd.patch.yaml
+  path: clustersecretstores.patch.yaml
