@@ -209,9 +209,9 @@ config:
 #   # -- Service labels.
 #   labels: {}
 #
-# serviceAccount:
-#   # -- Enable creation of ServiceAccount for nginx pod
-#   create: true
+serviceAccount:
+  # -- Enable creation of ServiceAccount for nginx pod
+  create: true
 #   # -- The name of the ServiceAccount to use.
 #   # @default -- A name is generated using the `amazon-eks-pod-identity-webhook.fullname` template
 #   name: ""
