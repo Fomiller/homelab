@@ -1,6 +1,6 @@
 loki:
   commonConfig:
-    replication_factor: 3
+    replication_factor: 1
   schemaConfig:
     configs:
       - from: "2024-04-01"
@@ -36,6 +36,7 @@ loki:
       insecure: false
       # HTTP configuration settings
       http_config: {}
+      
   persistence:
     enabled: false
 
