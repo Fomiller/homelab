@@ -49,9 +49,9 @@ crds:
 #   # -- If true, create CRDs for Push Secret.
   createPushSecret: true
 #   annotations: {}
-#   conversion:
+  conversion:
 #     # -- Conversion is disabled by default as we stopped supporting v1alpha1.
-#     enabled: false
+    enabled: false
 #
 # imagePullSecrets: []
 # nameOverride: ""
@@ -362,15 +362,10 @@ serviceMonitor:
 # hostNetwork: false
 #
 webhook:
-  create: true
-  serviceName: external-secrets-webhook
-  certManager:
-    enabled: true
-webhook:
 #   # -- Annotations to place on validating webhook configuration.
 #   annotations: {}
 #   # -- Specifies whether a webhook deployment be created. If set to false, crds.conversion.enabled should also be set to false otherwise the kubeapi will be hammered because the conversion is looking for a webhook endpoint.
-  create: true
+  create: false
 #   # -- Specifies the time to check if the cert is valid
 #   certCheckInterval: "5m"
 #   # -- Specifies the lookaheadInterval for certificate validity
@@ -554,9 +549,9 @@ webhook:
 #     # Check the documentation of your load balancer provider to see if/how this should be used.
 #     loadBalancerIP: ""
 #
-# certController:
+certController:
 #   # -- Specifies whether a certificate controller deployment be created.
-#   create: true
+  create: false
 #   requeueInterval: "5m"
 #   replicaCount: 1
 #   # -- Specifies Log Params to the Certificate Controller
