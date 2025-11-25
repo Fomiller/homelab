@@ -51,7 +51,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: argocd-autopilot
         app.kubernetes.io/name: '{{ appName }}'
-      name: homelab-{{ userGivenName }}
+      name: {{ userGivenName }}
       namespace: argocd
     spec:
       destination:
