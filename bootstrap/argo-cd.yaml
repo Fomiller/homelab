@@ -18,9 +18,9 @@ spec:
     kind: Application
   project: default
   source:
-    path: bootstrap/argo-cd
+    path: k8s/bootstrap/argo-cd
     repoURL: https://github.com/Fomiller/homelab.git
-    targetRevision: argocd-bootstrap
+    targetRevision: main
   syncPolicy:
     automated:
       allowEmpty: true

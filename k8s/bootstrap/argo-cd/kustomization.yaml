@@ -12,6 +12,7 @@ configMapGenerator:
   behavior: merge
   literals:
   - |
+    kustomization.buildOptions: --enable-helm
     repository.credentials=- passwordSecret:
         key: git_token
         name: autopilot-secret

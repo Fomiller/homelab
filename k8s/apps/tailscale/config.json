@@ -3,9 +3,9 @@
   "userGivenName": "tailscale",
   "destNamespace": "default",
   "destServer": "https://kubernetes.default.svc",
-  "srcPath": "apps/tailscale",
+  "srcPath": "k8s/apps/tailscale",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",
-  "srcTargetRevision": "argocd-bootstrap",
+  "srcTargetRevision": "main",
   "labels": null,
   "annotations": null
 }
