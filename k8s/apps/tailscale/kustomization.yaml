@@ -5,6 +5,7 @@ namespace: tailscale
 
 resources:
 - namespace.yaml
+- external-secrets.yaml
 
 helmCharts:
 - name: tailscale-operator

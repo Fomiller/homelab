@@ -5,6 +5,7 @@ namespace: external-secrets
 
 resources:
 - namespace.yaml
+- external-secrets.yaml
 
 helmCharts:
 - name: external-secrets
