@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 
-namespace: metallb
+namespace: metallb-system
 
 helmCharts:
 - name: metallb
@@ -12,4 +12,5 @@ helmCharts:
   releaseName: metallb
   includeCRDs: true
   version: v0.15.2
+  namespace: metallb-system
   valuesFile: values.yaml
