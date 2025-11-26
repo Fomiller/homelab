@@ -96,6 +96,16 @@ resultsCache:
       memory: .5Gi
     limits:
       memory: 1Gi
+
+
+extraVolumeMounts:
+  - name: loki-data
+    mountPath: /var/loki
+
+extraVolumes:
+  - name: loki-data
+    persistentVolumeClaim:
+      claimName: loki-data-pvc
   
 # SCALABLE *********
 # loki:
