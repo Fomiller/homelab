@@ -43,3 +43,8 @@ patches:
     kind: CustomResourceDefinition
     name: thanosrulers.monitoring.coreos.com
   path: thanosrulers.crd.patch.yaml
+- target:
+    version: v1
+    kind: Prometheus
+    name: prometheus-kube-prometheus-prometheus
+  path: prometheuses.healthcheck.patch.yaml
