@@ -41,5 +41,5 @@ patches:
 - target:
     version: v1
     kind: CustomResourceDefinition
-    name: thanosruler.monitoring.coreos.com
+    name: thanosrulers.monitoring.coreos.com
   path: thanosrulers.crd.patch.yaml
