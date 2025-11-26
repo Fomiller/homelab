@@ -11,7 +11,7 @@ configMapGenerator:
 - name: argocd-cm
   behavior: merge
   files:
-    resource.customizations.monitoring.coreos.com_Prometheus.health.lua: prometheus-healthcheck.lua
+    - resource.customizations.monitoring.coreos.com_Prometheus.health.lua=prometheus-healthcheck.lua
   literals:
   - |
     repository.credentials=- passwordSecret:
