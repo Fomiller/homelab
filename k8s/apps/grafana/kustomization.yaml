@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
 - namespace.yaml
-- tailscale.patch.yaml
 
 namespace: monitoring
 
@@ -14,3 +13,9 @@ helmCharts:
   includeCRDs: true
   version: 10.2.0
   valuesFile: values.yaml
+    
+patches:
+  - path: tailscale.patch.yaml
+    target:
+      kind: Service
+      name: grafana
