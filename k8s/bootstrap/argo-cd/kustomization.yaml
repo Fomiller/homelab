@@ -21,8 +21,7 @@ configMapGenerator:
         name: autopilot-secret
   - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
   - |
-   resource.customizations: |
-    monitoring.coreos.com/Prometheus:
+    resource.customizations.monitoring.coreos.com_Prometheus:
       health.lua: |
         if obj.metadata.annotations ~= nil and obj.metadata.annotations["argocd.argoproj.io/skip-health-check"] ~= nil then
           hs = {}
