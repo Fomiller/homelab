@@ -14,3 +14,9 @@ helmCharts:
   version: 1.10.1
   namespace: longhorn-system
   valuesFile: values.yaml
+    
+patches:
+  - path: tailscale.patch.yaml
+    target:
+      kind: Service
+      name: longhorn-frontend
