@@ -11,3 +11,35 @@ helmCharts:
   version: 79.8.2
   namespace: monitoring
   valuesFile: values.yaml
+    
+patches:
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: alertmanagerconfigs.monitoring.coreos.com
+  path: alertmanagerconfigs.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: alertmanagers.monitoring.coreos.com
+  path: alertmanagers.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: prometheusagents.monitoring.coreos.com
+  path: prometheusagents.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: prometheuses.monitoring.coreos.com
+  path: prometheuses.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: scrapeconfigs.monitoring.coreos.com
+  path: scrapeconfigs.crd.patch.yaml
+- target:
+    version: v1
+    kind: CustomResourceDefinition
+    name: thanosruler.monitoring.coreos.com
+  path: thanosruler.crd.patch.yaml
