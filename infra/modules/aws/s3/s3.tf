@@ -61,7 +61,7 @@ resource "aws_s3_object" "talos_irsa_openid_configuration" {
 }
 
 resource "aws_s3_bucket" "loki_chunks" {
-  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-chunks"
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-loki-chunks"
     
   tags = {
     Owner       = "Forrest Miller"
@@ -71,7 +71,7 @@ resource "aws_s3_bucket" "loki_chunks" {
 }
 
 resource "aws_s3_bucket" "loki_ruler" {
-  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-ruler"
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-loki-ruler"
     
   tags = {
     Owner       = "Forrest Miller"
@@ -81,7 +81,7 @@ resource "aws_s3_bucket" "loki_ruler" {
 }
 
 resource "aws_s3_bucket" "loki_admin" {
-  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-admin"
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-loki-admin"
     
   tags = {
     Owner       = "Forrest Miller"
