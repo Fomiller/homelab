@@ -52,7 +52,7 @@ deploymentMode: SingleBinary
 singleBinary:
   replicas: 2
   persistence:
-    storageClass: gp2
+    storageClass: longhorn
     accessModes:
       - ReadWriteOnce
     size: 30Gi
