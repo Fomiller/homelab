@@ -1,3 +1,55 @@
+# ============ TRAEFIK BASIC VALUES ============
+# Minimal working Traefik setup
+
+deployment:
+  enabled: true
+  replicas: 1
+
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+ports:
+  web:
+    port: 80
+    expose: true
+    exposedPort: 80
+    protocol: TCP
+  websecure:
+    port: 443
+    expose: true
+    exposedPort: 443
+    protocol: TCP
+
+service:
+  enabled: true
+  type: LoadBalancer
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+
+# Disable Traefik Pilot
+pilot:
+  enabled: false
+
+# Disable metrics
+metrics:
+  prometheus:
+    enabled: false
+
+# Disable tracing
+tracing:
+  enabled: false
+
+# Disable Traefik dashboard auth & ingress 
+# (you can add them later)
+api:
+  dashboard: true
+  insecure: true
+
 # # Default values for Traefik
 # # This is a YAML-formatted file.
 # # Declare variables to be passed into templates
