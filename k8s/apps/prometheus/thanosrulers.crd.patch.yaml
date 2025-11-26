@@ -3,4 +3,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: ServerSideApply=true
-  name: thanosruler.monitoring.coreos.com
+  name: thanosrulers.monitoring.coreos.com
