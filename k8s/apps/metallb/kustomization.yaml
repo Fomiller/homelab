@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - namespace.yaml
+- ip-address-pool.yaml
 
 namespace: metallb-system
 
