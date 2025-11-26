@@ -52,7 +52,7 @@ configMapGenerator:
           end
         end
         return hs
-  - resource.customizations.useOpenLibs.monitoring.coreos.com_Prometheus: 'true'
+  - resource.customizations.useOpenLibs.monitoring.coreos.com_Prometheus='true'
  
 patches:
   - path: tailscale.patch.yaml
