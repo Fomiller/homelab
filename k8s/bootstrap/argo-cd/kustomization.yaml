@@ -10,8 +10,6 @@ resources:
 configMapGenerator:
 - name: argocd-cm
   behavior: merge
-  files:
-    - resource.customizations.monitoring.coreos.com_Prometheus.health.lua=prometheus-healthcheck.lua
   literals:
   - |
     repository.credentials=- passwordSecret:
@@ -22,7 +20,6 @@ configMapGenerator:
         key: git_username
         name: autopilot-secret
   - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
-  - resource.customizations.useOpenLibs.monitoring.coreos.com_Prometheus='true'
  
 patches:
   - path: tailscale.patch.yaml
