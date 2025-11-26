@@ -36,6 +36,9 @@ loki:
       insecure: false
       # HTTP configuration settings
       http_config: {}
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
       
   persistence:
     enabled: false
@@ -97,16 +100,6 @@ resultsCache:
     limits:
       memory: 1Gi
 
-
-extraVolumeMounts:
-  - name: loki-data
-    mountPath: /var/loki
-
-extraVolumes:
-  - name: loki-data
-    persistentVolumeClaim:
-      claimName: loki-data-pvc
-  
 # SCALABLE *********
 # loki:
 #   schemaConfig:
