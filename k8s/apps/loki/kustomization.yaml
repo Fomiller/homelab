@@ -13,11 +13,4 @@ helmCharts:
   repo: https://grafana.github.io/helm-charts
   includeCRDs: true
   version: 6.46.0
-  namespace: monitoring
   valuesFile: values.yaml
-    
-patches:
-  - path: tailscale.patch.yaml
-    target:
-      kind: Service
-      name: prometheus-grafana
