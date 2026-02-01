@@ -754,7 +754,7 @@ tuning:
   #
   # When this option is enabled, Helm creates a privileged container. If your security profile does not allow this, you can disable this container by setting `tune_aio_events` to `false`.
   # For more details, see the [tuning documentation](https://docs.redpanda.com/docs/deploy/deployment-option/self-hosted/kubernetes/kubernetes-tune-workers/).
-  tune_aio_events: true
+  tune_aio_events: false
   #
   # Syncs NTP
   # tune_clocksource: false
