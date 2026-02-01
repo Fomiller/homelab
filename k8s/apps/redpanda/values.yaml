@@ -281,10 +281,10 @@ external:
   # If external.domain is set, the domain is appended to these values.
   # There is an option to define a single external address for all brokers and leverage
   # prefixTemplate as it will be calculated during initContainer execution.
-  # addresses:
-  # - redpanda-0
-  # - redpanda-1
-  # - redpanda-2
+  addresses:
+  - redpanda-0
+  - redpanda-1
+  - redpanda-2
   #
   # annotations:
     # For example:
@@ -427,7 +427,7 @@ resources:
       # -- Maximum memory count for each Redpanda broker.
       # Equivalent to `resources.limits.memory`.
       # For production, use `10Gi` or greater.
-      max: 2.5Gi
+      max: 0.5Gi
     #
     # This optional `redpanda` object allows you to specify the memory size for both the Redpanda
     # process and the Seastar subsystem.
@@ -464,7 +464,7 @@ storage:
   # used to store Redpanda's data. Otherwise, `storage.hostPath` is used.
   persistentVolume:
     enabled: true
-    size: 20Gi
+    size: 1Gi
     # -- To disable dynamic provisioning, set to `-`.
     # If undefined or empty (default), then no storageClassName spec is set,
     # and the default dynamic provisioner is chosen (gp2 on AWS, standard on
