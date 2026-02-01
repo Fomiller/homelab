@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+
+namespace: traefik
+
+helmCharts:
+- name: redpanda
+  repo: https://traefik.github.io/charts
+  releaseName: redpanda
+  includeCRDs: true
+  version: 25.3.2
+  namespace: redpanda
+  valuesFile: values.yaml
