@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
 - namespace.yaml
-- tailscale.patch.yaml
 
 namespace: redpanda
 
@@ -15,3 +14,9 @@ helmCharts:
   version: 25.3.2
   namespace: redpanda
   valuesFile: values.yaml
+    
+patches:
+  - path: tailscale.patch.yaml
+    target:
+      kind: Service
+      name: redpanda-console
