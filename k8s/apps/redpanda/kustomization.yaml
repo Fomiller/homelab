@@ -8,7 +8,7 @@ namespace: traefik
 
 helmCharts:
 - name: redpanda
-  repo: https://traefik.github.io/charts
+  repo: https://charts.redpanda.com
   releaseName: redpanda
   includeCRDs: true
   version: 25.3.2
