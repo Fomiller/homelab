@@ -575,7 +575,7 @@ post_install_job:
 
 statefulset:
   # -- Number of Redpanda brokers (Redpanda Data recommends setting this to the number of worker nodes in the cluster)
-  replicas: 3
+  replicas: 2
   updateStrategy:
     type: RollingUpdate
   budget:
