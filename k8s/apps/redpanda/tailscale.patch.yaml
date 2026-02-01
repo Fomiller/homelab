@@ -6,4 +6,12 @@ metadata:
   annotations:
     tailscale.com/expose: "true"
     tailscale.com/hostname: "redpanda-console"
-    tailscale.com/port: "8080"
+spec:
+  type: ClusterIP
+  selector:
+    app: redpanda-console
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
