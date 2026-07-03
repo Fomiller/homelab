@@ -1,14 +1,14 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deploy-aws.yaml
 
-name: 'Terragrunt Deploy'
-  
+name: 'Terragrunt Deploy - AWS'
+
 on:
   push:
     paths:
-      - '.github/**'
-      - 'infra/**'
+      - '.github/workflows/deploy-aws.yaml'
+      - 'infra/modules/aws/**'
       - 'justfile'
-   
+
 jobs:
   Pre-check:
     runs-on: ubuntu-latest

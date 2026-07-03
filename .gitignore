@@ -34,6 +34,7 @@ env.list
 
 # talos
 cp1
+infra/modules/talos/secrets.yaml
 
 # helm
 charts
