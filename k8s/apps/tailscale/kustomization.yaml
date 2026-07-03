@@ -6,6 +6,7 @@ namespace: tailscale
 resources:
 - namespace.yaml
 - external-secrets.yaml
+- connector.yaml
 
 helmCharts:
 - name: tailscale-operator

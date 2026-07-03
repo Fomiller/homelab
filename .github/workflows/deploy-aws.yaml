@@ -23,7 +23,7 @@ jobs:
           concurrent_skipping: 'same_content_newer'
             
   Deploy-infra:
-    name: 'Deploy Infra'
+    name: 'Deploy AWS Infra'
     needs: Pre-check
     uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
     with:
