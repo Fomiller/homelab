@@ -71,16 +71,16 @@ resource "cloudflare_zero_trust_access_identity_provider" "onetimepin" {
   config     = {}
 }
 
-# Dormant until google_oauth_client_id/secret are set — kept wired in so
-# switching to Google sign-in later is just filling in the Doppler secrets.
+# Dormant until cloudflare_google_oauth_client_id/secret are set — kept wired
+# in so switching to Google sign-in later is just filling in the Doppler secrets.
 resource "cloudflare_zero_trust_access_identity_provider" "google" {
-  count      = var.google_oauth_client_id != "" ? 1 : 0
+  count      = var.cloudflare_google_oauth_client_id != "" ? 1 : 0
   account_id = var.cloudflare_account_id
   name       = "Google"
   type       = "google"
   config = {
-    client_id     = var.google_oauth_client_id
-    client_secret = var.google_oauth_client_secret
+    client_id     = var.cloudflare_google_oauth_client_id
+    client_secret = var.cloudflare_google_oauth_client_secret
   }
 }
 
