@@ -11,19 +11,6 @@ resource "aws_ses_domain_dkim" "this" {
   domain = aws_ses_domain_identity.this.domain
 }
 
-# While the account is in the SES sandbox, delivery only succeeds to
-# verified recipient identities — AWS emails each address a confirmation
-# link on creation, which the recipient has to click before mail actually
-# lands. Add an entry here per person invited while still sandboxed;
-# unnecessary once SES production access is granted.
-resource "aws_ses_email_identity" "forrest" {
-  email = var.forrest_email
-}
-
-resource "aws_ses_email_identity" "grayson" {
-  email = var.grayson_email
-}
-
 resource "cloudflare_dns_record" "ses_verification" {
   zone_id = data.cloudflare_zone.this.id
   name    = "_amazonses.${var.zone_name}"
