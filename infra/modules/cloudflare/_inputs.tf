@@ -6,22 +6,17 @@ variable "zone_name" {
   default = "fomiller.com"
 }
 
-# Base hostname the tunnel owns within the zone — both the bare name and
-# every subdomain under it (*.lab.fomiller.com) route through the tunnel.
-# Keeps the rest of fomiller.com's namespace free for anything else.
-variable "subdomain" {
-  type    = string
-  default = "lab.fomiller.com"
-}
-
 variable "tunnel_name" {
   type    = string
   default = "homelab"
 }
 
-# Every hostname under var.subdomain forwards here — Traefik then routes by
-# Host header to whichever app's IngressRoute/Ingress matches, so exposing a
-# new app is a k8s-only change (new IngressRoute), not a Terraform/DNS change.
+# Every first-level subdomain (*.fomiller.com) forwards here — Traefik then
+# routes by Host header to whichever app's IngressRoute/Ingress matches, so
+# exposing a new app is a k8s-only change (new IngressRoute), not a
+# Terraform/DNS change. Stuck to one level deep (not e.g. lab.fomiller.com)
+# because Cloudflare's free Universal SSL cert only covers the apex and
+# *.fomiller.com — a second-level wildcard needs a paid plan (Total TLS).
 variable "tunnel_target_service" {
   type    = string
   default = "http://traefik.traefik.svc.cluster.local:80"

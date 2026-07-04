@@ -24,11 +24,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "this" {
   config = {
     ingress = [
       {
-        hostname = var.subdomain
-        service  = var.tunnel_target_service
-      },
-      {
-        hostname = "*.${var.subdomain}"
+        hostname = "*.${var.zone_name}"
         service  = var.tunnel_target_service
       },
       # Required catch-all — must be last, must have no hostname.
@@ -44,18 +40,9 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this.id
 }
 
-resource "cloudflare_dns_record" "root" {
-  zone_id = data.cloudflare_zone.this.id
-  name    = var.subdomain
-  type    = "CNAME"
-  content = "${cloudflare_zero_trust_tunnel_cloudflared.this.id}.cfargotunnel.com"
-  proxied = true
-  ttl     = 1
-}
-
 resource "cloudflare_dns_record" "wildcard" {
   zone_id = data.cloudflare_zone.this.id
-  name    = "*.${var.subdomain}"
+  name    = "*.${var.zone_name}"
   type    = "CNAME"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.this.id}.cfargotunnel.com"
   proxied = true

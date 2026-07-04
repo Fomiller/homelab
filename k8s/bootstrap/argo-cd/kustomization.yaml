@@ -6,6 +6,7 @@ namespace: argocd
 resources:
   - github.com/argoproj-labs/argocd-autopilot/manifests/base?ref=v0.4.17
   - namespace.yaml
+  - ingressroute.yaml
 
 configMapGenerator:
 - name: argocd-cm
@@ -20,7 +21,11 @@ configMapGenerator:
         key: git_username
         name: autopilot-secret
   - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
- 
+- name: argocd-cmd-params-cm
+  behavior: merge
+  literals:
+  - server.insecure="true"
+
 patches:
   - path: tailscale.patch.yaml
     target:
