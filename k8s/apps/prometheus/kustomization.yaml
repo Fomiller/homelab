@@ -3,6 +3,9 @@ kind: Kustomization
 
 namespace: monitoring
 
+resources:
+- ingressroute.yaml
+
 helmCharts:
 - name: kube-prometheus-stack
   releaseName: prometheus
