@@ -14,6 +14,12 @@ provider "aws" {
     }
   }
 }
+
+# Only used for the SES domain verification/DKIM DNS records in ses.tf —
+# fomiller.com's zone lives in Cloudflare, same as infra/modules/cloudflare.
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
 EOF
 }
 
@@ -35,6 +41,10 @@ terraform {
     random = {
       source  = "hashicorp/random"
       version = ">=3.6.0"
+    }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = ">=5.0.0"
     }
   }
 }

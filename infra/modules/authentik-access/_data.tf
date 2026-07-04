@@ -11,3 +11,10 @@ data "aws_secretsmanager_secret" "authentik_secrets" {
 data "aws_secretsmanager_secret_version" "authentik_secrets" {
   secret_id = data.aws_secretsmanager_secret.authentik_secrets.id
 }
+
+# Needed for the SES verification/DKIM DNS records in ses.tf.
+data "cloudflare_zone" "this" {
+  filter = {
+    name = var.zone_name
+  }
+}

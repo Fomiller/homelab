@@ -14,6 +14,13 @@ variable "cloudflare_team_name" {
   type = string
 }
 
+# Same Doppler secret infra/modules/cloudflare uses (CLOUDFLARE_API_TOKEN) —
+# needed here too for the SES verification/DKIM DNS records in ses.tf.
+variable "cloudflare_api_token" {
+  type      = string
+  sensitive = true
+}
+
 # Must stay in infra/modules/cloudflare's allowed_emails — Cloudflare Access
 # matches the email claim authentik sends against that policy.
 variable "forrest_email" {
