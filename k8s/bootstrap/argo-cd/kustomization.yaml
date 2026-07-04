@@ -31,3 +31,8 @@ patches:
     target:
       kind: Service
       name: argocd-server
+  - path: applicationsets-crd.patch.yaml
+    target:
+      version: v1
+      kind: CustomResourceDefinition
+      name: applicationsets.argoproj.io
