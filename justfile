@@ -2,7 +2,7 @@ import? 'just/base.just'
 import? 'just/terraform.just'
 
 project := "homelab"
-infraDir := "infra/modules/aws/"
+infraDir := "infra/live/dev"
 env := "dev"
 cluster := "homelab"
 

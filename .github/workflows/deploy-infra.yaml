@@ -1,0 +1,72 @@
+# .github/workflows/deploy-infra.yaml
+#
+# Single workflow for all of infra/live/dev. Replaces the old per-module
+# deploy-{authentik,authentik-access,aws,cloudflare,talos}.yaml — the
+# terragrunt stacks layout means every unit is interlinked through explicit
+# dependencies now, so they deploy together as one stack instead of five
+# independent pipelines.
+#
+# - Pull requests only ever plan (no apply, no live changes).
+# - Only a push to main applies, and only against infra/live/dev — infra/live/prod
+#   and infra/live/staging are scaffolding only and are never targeted here.
+
+name: 'Terragrunt Deploy - Infra'
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deploy-infra.yaml'
+      - 'infra/live/dev/**'
+      - 'infra/stacks/**'
+      - 'infra/units/**'
+      - 'justfile'
+      - 'just/terraform.just'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-infra.yaml'
+      - 'infra/live/dev/**'
+      - 'infra/stacks/**'
+      - 'infra/units/**'
+      - 'justfile'
+      - 'just/terraform.just'
+
+jobs:
+  Pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: 'true'
+          concurrent_skipping: 'same_content_newer'
+
+  Plan-infra:
+    name: 'Plan Infra (dev)'
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: Pre-check
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@homelab-terragrunt-stacks-plan-apply
+    with:
+      environment: dev
+      infra-dir: infra/live/dev
+      doppler-project: homelab
+      tg-plan: true
+      use-tailscale: true
+      tailscale-tags: tag:ci
+    secrets: inherit
+
+  Apply-infra:
+    name: 'Apply Infra (dev)'
+    if: ${{ github.event_name == 'push' }}
+    needs: Pre-check
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@homelab-terragrunt-stacks-plan-apply
+    with:
+      environment: dev
+      infra-dir: infra/live/dev
+      doppler-project: homelab
+      use-tailscale: true
+      tailscale-tags: tag:ci
+    secrets: inherit

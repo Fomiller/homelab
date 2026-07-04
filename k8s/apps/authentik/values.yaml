@@ -32,7 +32,7 @@ global:
         secretKeyRef:
           name: authentik-secrets
           key: bootstrap_email
-    # SES SMTP relay (infra/modules/authentik-access/ses.tf) — powers the
+    # SES SMTP relay (infra/units/aws/global/ses) — powers the
     # invitation/enrollment flow's email stages, password recovery, etc.
     - name: AUTHENTIK_EMAIL__HOST
       valueFrom:
