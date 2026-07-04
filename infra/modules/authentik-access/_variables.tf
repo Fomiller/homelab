@@ -21,6 +21,15 @@ variable "forrest_email" {
   default = "forrestmillerj@gmail.com"
 }
 
+# Same deal as forrest_email — must stay in infra/modules/cloudflare's
+# allowed_emails. This is the "invite" for the Google source's invite-only
+# matching (see google-source.tf): the User has to exist here before their
+# Google login has anything to email_link against.
+variable "grayson_email" {
+  type    = string
+  default = "millergrayson0@gmail.com"
+}
+
 # Optional — Google federated login into authentik (see google-source.tf).
 # Leave unset to keep the source dormant. Doppler secret names:
 # AUTHENTIK_GOOGLE_CLIENT_ID, AUTHENTIK_GOOGLE_CLIENT_SECRET.
