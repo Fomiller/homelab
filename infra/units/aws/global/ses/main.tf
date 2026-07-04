@@ -59,7 +59,7 @@ resource "aws_iam_access_key" "authentik_ses" {
 # Consumed by k8s/apps/authentik's second ExternalSecret, same
 # ClusterSecretStore/aws-clustersecretstore pattern as authentik-secrets.
 resource "aws_secretsmanager_secret" "authentik_ses_smtp" {
-  name       = "dev/fomiller/homelab/authentik-ses-smtp"
+  name       = "${var.environment}/fomiller/homelab/authentik-ses-smtp"
   kms_key_id = data.aws_kms_key.fomiller_master.id
 }
 

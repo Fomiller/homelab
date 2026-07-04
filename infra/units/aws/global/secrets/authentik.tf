@@ -37,7 +37,7 @@ resource "random_password" "bootstrap_token" {
 # server/worker env vars and the bundled bitnami postgresql chart's
 # existingSecret expect (`password` / `postgres-password`).
 resource "aws_secretsmanager_secret" "authentik_secrets" {
-  name       = "dev/fomiller/homelab/authentik-secrets"
+  name       = "${var.environment}/fomiller/homelab/authentik-secrets"
   kms_key_id = data.aws_kms_key.fomiller_master.id
 }
 

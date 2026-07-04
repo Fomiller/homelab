@@ -13,7 +13,7 @@ resource "random_password" "forrest" {
 # Password changes made later in the authentik UI won't drift this resource —
 # the provider never reads passwords back.
 resource "aws_secretsmanager_secret" "forrest_user" {
-  name       = "dev/fomiller/homelab/authentik-forrest-user"
+  name       = "${var.environment}/fomiller/homelab/authentik-forrest-user"
   kms_key_id = data.aws_kms_key.fomiller_master.id
 }
 
@@ -36,7 +36,7 @@ resource "random_password" "grayson" {
 # Fetch with:
 #   aws secretsmanager get-secret-value --secret-id dev/fomiller/homelab/authentik-grayson-user
 resource "aws_secretsmanager_secret" "grayson_user" {
-  name       = "dev/fomiller/homelab/authentik-grayson-user"
+  name       = "${var.environment}/fomiller/homelab/authentik-grayson-user"
   kms_key_id = data.aws_kms_key.fomiller_master.id
 }
 

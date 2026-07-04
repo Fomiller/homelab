@@ -3,7 +3,7 @@
 # creds. tunnel_token is a dependency input from cloudflare/global/tunnels —
 # this unit just archives the value Cloudflare issued, it isn't generated here.
 resource "aws_secretsmanager_secret" "cloudflare_tunnel_creds" {
-  name       = "dev/fomiller/homelab/cloudflare-tunnel-creds"
+  name       = "${var.environment}/fomiller/homelab/cloudflare-tunnel-creds"
   kms_key_id = data.aws_kms_key.fomiller_master.id
 }
 

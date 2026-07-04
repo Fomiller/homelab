@@ -3,5 +3,5 @@ include "root" {
 }
 
 inputs = {
-  asset_name = "iam"
+  asset_name = "iam/policies"
 }
