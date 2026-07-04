@@ -1,9 +1,18 @@
 # Google federated login into authentik: users sign in with their Google
-# account, authentik enrolls them on first login via the stock
-# default-source-enrollment flow (prompts once for a username, creates the
-# user, logs them in). email_link matching means a Google login whose email
-# matches an existing authentik user just links to it instead of creating a
-# duplicate.
+# account. email_link matching means a Google login whose email matches an
+# existing authentik user just links to it — no invite step needed for
+# people who already have a User (e.g. via infra/modules/authentik-access's
+# users.tf pattern).
+#
+# Invite-only: enrollment_flow is deliberately NOT set below, so a Google
+# login with no matching email gets rejected instead of auto-creating a
+# User — authentik.fomiller.com sits outside protected_hostnames (see
+# infra/modules/cloudflare's locals.authentik_base_url comment), so open
+# self-enrollment would let any Google account create an authentik User.
+# data.authentik_flow.source_enrollment is kept below, unused, so
+# re-enabling self-enrollment later is just adding
+# `enrollment_flow = data.authentik_flow.source_enrollment.id` back to the
+# resource.
 #
 # Dormant until the Doppler secrets are set — same deferred pattern as the
 # cloudflare module's IdPs. Deliberately NOT reusing GOOGLE_OAUTH_CLIENT_ID/
@@ -18,6 +27,8 @@ data "authentik_flow" "source_authentication" {
   slug = "default-source-authentication"
 }
 
+# Unused while invite-only (see resource comment above) — kept so
+# self-enrollment can be flipped back on with a one-line change.
 data "authentik_flow" "source_enrollment" {
   slug = "default-source-enrollment"
 }
@@ -30,7 +41,6 @@ resource "authentik_source_oauth" "google" {
   consumer_key        = var.authentik_google_client_id
   consumer_secret     = var.authentik_google_client_secret
   authentication_flow = data.authentik_flow.source_authentication.id
-  enrollment_flow     = data.authentik_flow.source_enrollment.id
   user_matching_mode  = "email_link"
 }
 
