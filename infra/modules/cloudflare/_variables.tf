@@ -11,18 +11,19 @@ variable "cloudflare_account_id" {
   type = string
 }
 
-# Optional — Google sign-in for the Cloudflare Access login wall, deferred
-# for now (one-time-PIN email login is active in the meantime). Leave unset
-# to skip; the google identity provider resource only gets created once
-# both are non-empty. Doppler secret names: GOOGLE_OAUTH_CLIENT_ID,
-# GOOGLE_OAUTH_CLIENT_SECRET. Redirect URI to register in Google Cloud
+# Optional — Google sign-in directly on the Cloudflare Access login wall
+# (distinct from AUTHENTIK_GOOGLE_* in infra/modules/authentik-access, which
+# federates Google *into* authentik). Leave unset to skip; the google
+# identity provider resource only gets created once both are non-empty.
+# Doppler secret names: CLOUDFLARE_GOOGLE_CLIENT_ID,
+# CLOUDFLARE_GOOGLE_CLIENT_SECRET. Redirect URI to register in Google Cloud
 # Console: https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
-variable "google_oauth_client_id" {
+variable "cloudflare_google_client_id" {
   type    = string
   default = ""
 }
 
-variable "google_oauth_client_secret" {
+variable "cloudflare_google_client_secret" {
   type      = string
   sensitive = true
   default   = ""
