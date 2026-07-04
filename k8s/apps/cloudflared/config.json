@@ -1,0 +1,11 @@
+{
+  "appName": "cloudflared",
+  "userGivenName": "cloudflared",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/cloudflared",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
