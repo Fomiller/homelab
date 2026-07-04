@@ -32,6 +32,18 @@ resource "random_password" "cloudflare_access_client_secret" {
   special = false
 }
 
+# The openid/email/profile scope mappings the UI would have auto-selected —
+# providers created via the API get none, leaving tokens without email/profile
+# claims (Cloudflare Access then fails with "Failed to fetch user/group
+# information from the identity provider").
+data "authentik_property_mapping_provider_scope" "cloudflare_access" {
+  managed_list = [
+    "goauthentik.io/providers/oauth2/scope-openid",
+    "goauthentik.io/providers/oauth2/scope-email",
+    "goauthentik.io/providers/oauth2/scope-profile",
+  ]
+}
+
 resource "authentik_provider_oauth2" "cloudflare_access" {
   name               = "Cloudflare Access"
   client_id          = "cloudflare-access"
@@ -39,6 +51,7 @@ resource "authentik_provider_oauth2" "cloudflare_access" {
   authorization_flow = data.authentik_flow.default_authorization.id
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   signing_key        = data.authentik_certificate_key_pair.self_signed.id
+  property_mappings  = data.authentik_property_mapping_provider_scope.cloudflare_access.ids
 
   allowed_redirect_uris = [
     {
