@@ -5,8 +5,13 @@ namespace: homepage
 
 resources:
 - namespace.yaml
-- rbac.yaml
-- configmap.yaml
-- deployment.yaml
-- service.yaml
 - ingressroute.yaml
+
+helmCharts:
+- name: homepage
+  repo: https://jameswynn.github.io/helm-charts
+  releaseName: homepage
+  includeCRDs: true
+  version: 2.1.0
+  namespace: homepage
+  valuesFile: values.yaml
