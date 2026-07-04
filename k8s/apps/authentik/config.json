@@ -1,0 +1,11 @@
+{
+  "appName": "authentik",
+  "userGivenName": "authentik",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/authentik",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
