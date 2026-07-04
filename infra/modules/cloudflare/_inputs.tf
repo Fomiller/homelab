@@ -36,6 +36,11 @@ variable "allowed_emails" {
 # here to bring a new app under the same login wall, no other Terraform
 # changes needed.
 variable "protected_hostnames" {
-  type    = list(string)
-  default = ["argocd.fomiller.com", "grafana.fomiller.com"]
+  type = list(string)
+  default = [
+    "argocd.fomiller.com",
+    "grafana.fomiller.com",
+    "longhorn.fomiller.com",
+    "redpanda.fomiller.com",
+  ]
 }
