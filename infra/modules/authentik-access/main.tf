@@ -52,6 +52,10 @@ resource "authentik_provider_oauth2" "cloudflare_access" {
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   signing_key        = data.authentik_certificate_key_pair.self_signed.id
   property_mappings  = data.authentik_property_mapping_provider_scope.cloudflare_access.ids
+  # Like property_mappings, API-created providers start with no grant types
+  # at all — authentik then 400s the code exchange with "Invalid grant_type
+  # for provider". Cloudflare Access uses the standard code flow.
+  grant_types = ["authorization_code", "refresh_token"]
 
   allowed_redirect_uris = [
     {
