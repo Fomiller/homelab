@@ -116,7 +116,7 @@ resource "cloudflare_zero_trust_access_application" "protected" {
   name             = "Homelab Admin Apps"
   domain           = var.protected_hostnames[0]
   type             = "self_hosted"
-  session_duration = "24h"
+  session_duration = "168h"
   allowed_idps = concat(
     [cloudflare_zero_trust_access_identity_provider.onetimepin.id],
     cloudflare_zero_trust_access_identity_provider.google[*].id,
