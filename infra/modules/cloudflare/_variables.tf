@@ -15,15 +15,15 @@ variable "cloudflare_account_id" {
 # (distinct from AUTHENTIK_GOOGLE_* in infra/modules/authentik-access, which
 # federates Google *into* authentik). Leave unset to skip; the google
 # identity provider resource only gets created once both are non-empty.
-# Doppler secret names: CLOUDFLARE_GOOGLE_CLIENT_ID,
-# CLOUDFLARE_GOOGLE_CLIENT_SECRET. Redirect URI to register in Google Cloud
-# Console: https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
-variable "cloudflare_google_client_id" {
+# Doppler secret names: CLOUDFLARE_GOOGLE_OAUTH_CLIENT_ID,
+# CLOUDFLARE_GOOGLE_OAUTH_CLIENT_SECRET. Redirect URI to register in Google
+# Cloud Console: https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
+variable "cloudflare_google_oauth_client_id" {
   type    = string
   default = ""
 }
 
-variable "cloudflare_google_client_secret" {
+variable "cloudflare_google_oauth_client_secret" {
   type      = string
   sensitive = true
   default   = ""
