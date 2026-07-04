@@ -13,3 +13,10 @@ variable "zone_name" {
 variable "cloudflare_team_name" {
   type = string
 }
+
+# Must stay in infra/modules/cloudflare's allowed_emails — Cloudflare Access
+# matches the email claim authentik sends against that policy.
+variable "forrest_email" {
+  type    = string
+  default = "forrestmillerj@gmail.com"
+}
