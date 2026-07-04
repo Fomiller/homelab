@@ -114,13 +114,14 @@ resource "cloudflare_zero_trust_access_identity_provider" "authentik" {
   account_id = var.cloudflare_account_id
   name       = "authentik"
   type       = "oidc"
+  # No issuer_url — the provider schema only allows it for type "saml";
+  # Cloudflare's generic OIDC config needs just the three endpoint URLs.
   config = {
     client_id     = var.authentik_oauth_client_id
     client_secret = var.authentik_oauth_client_secret
     auth_url      = "${local.authentik_base_url}/application/o/authorize/"
     token_url     = "${local.authentik_base_url}/application/o/token/"
     certs_url     = "${local.authentik_base_url}/application/o/cloudflare-access/jwks/"
-    issuer_url    = "${local.authentik_base_url}/application/o/cloudflare-access/"
     scopes        = ["openid", "email", "profile"]
   }
 }
