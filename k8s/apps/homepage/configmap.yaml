@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+data:
+  settings.yaml: |
+    title: Fomiller Homelab
+    theme: dark
+    color: slate
+    headerStyle: boxedWidgets
+    # Order/columns for the service groups defined in services.yaml.
+    layout:
+      Infrastructure:
+        style: row
+        columns: 4
+      Observability:
+        style: row
+        columns: 3
+      Data & Streaming:
+        style: row
+        columns: 2
+
+  widgets.yaml: |
+    # Live cluster stats — powered by the ServiceAccount RBAC in rbac.yaml
+    # plus kubernetes.yaml (mode: cluster). CPU/memory need metrics-server.
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: cluster
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+          hourCycle: h23
+
+  kubernetes.yaml: |
+    mode: cluster
+
+  docker.yaml: ""
+
+  services.yaml: |
+    # href      -> public URL (behind Cloudflare Access at the edge)
+    # siteMonitor -> in-cluster Service URL, so the status dot reflects real
+    #                pod health and is not tripped up by the Access login wall.
+    # Widgets that need API tokens (Grafana, ArgoCD) are intentionally left as
+    # plain links; add a `widget:` block with a token via external-secrets when
+    # you want their stats inline.
+    - Infrastructure:
+        - ArgoCD:
+            icon: argocd.png
+            href: https://argocd.fomiller.com
+            description: GitOps continuous delivery
+            siteMonitor: http://argocd-server.argocd.svc.cluster.local
+        - Authentik:
+            icon: authentik.png
+            href: https://authentik.fomiller.com
+            description: Identity provider / SSO
+            siteMonitor: http://authentik-server.authentik.svc.cluster.local
+        - Traefik:
+            icon: traefik.png
+            description: Ingress controller / edge router
+            siteMonitor: http://traefik.traefik.svc.cluster.local:80
+        - Longhorn:
+            icon: longhorn.png
+            href: https://longhorn.fomiller.com
+            description: Distributed block storage
+            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
+            widget:
+              type: longhorn
+              url: http://longhorn-frontend.longhorn-system.svc.cluster.local
+
+    - Observability:
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.fomiller.com
+            description: Dashboards & visualization
+            siteMonitor: http://prometheus-grafana.monitoring.svc.cluster.local
+        - Prometheus:
+            icon: prometheus.png
+            description: Metrics & alerting
+            siteMonitor: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+            widget:
+              type: prometheus
+              url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        - Loki:
+            icon: loki.png
+            description: Log aggregation
+            siteMonitor: http://loki-gateway.monitoring.svc.cluster.local:80
+
+    - Data & Streaming:
+        - Redpanda Console:
+            icon: redpanda.png
+            href: https://redpanda.fomiller.com
+            description: Kafka-compatible streaming console
+            siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
+
+  bookmarks.yaml: |
+    - Homelab:
+        - Repository:
+            - abbr: GH
+              href: https://github.com/Fomiller/homelab
+        - Cloudflare Zero Trust:
+            - abbr: CF
+              href: https://one.dash.cloudflare.com

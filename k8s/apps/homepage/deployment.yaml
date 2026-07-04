@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homepage
+    spec:
+      serviceAccountName: homepage
+      automountServiceAccountToken: true
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:v1.4.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # Required since homepage v1.0 — requests whose Host header is not
+            # in this list are rejected with "Bad Request". Cloudflare/Traefik
+            # forward the original home.fomiller.com host, so it must be listed.
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: home.fomiller.com
+          livenessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # /app/config is an emptyDir so homepage can write its logs there,
+            # while each config file is overlaid read-only from the ConfigMap.
+            - name: config
+              mountPath: /app/config
+            - name: config-files
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+            - name: config-files
+              mountPath: /app/config/widgets.yaml
+              subPath: widgets.yaml
+            - name: config-files
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+            - name: config-files
+              mountPath: /app/config/bookmarks.yaml
+              subPath: bookmarks.yaml
+            - name: config-files
+              mountPath: /app/config/docker.yaml
+              subPath: docker.yaml
+            - name: config-files
+              mountPath: /app/config/kubernetes.yaml
+              subPath: kubernetes.yaml
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: config-files
+          configMap:
+            name: homepage

@@ -1,0 +1,18 @@
+# home.fomiller.com is already covered by the *.fomiller.com wildcard DNS
+# record and the tunnel's wildcard ingress (both in infra/units/cloudflare),
+# which forward every subdomain to this Traefik instance. Exposing homepage
+# is therefore a k8s-only change: Traefik routes to it by Host header here.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`home.fomiller.com`)
+      kind: Rule
+      services:
+        - name: homepage
+          port: 80
