@@ -1,0 +1,162 @@
+image:
+  repository: ghcr.io/gethomepage/homepage
+  # Pinned to the chart's tested appVersion for reproducible syncs.
+  tag: v1.2.0
+
+# RBAC + a dedicated ServiceAccount are required for the Kubernetes widget
+# (config.kubernetes.mode: cluster) to read live cluster/node stats.
+enableRbac: true
+serviceAccount:
+  create: true
+  name: homepage
+
+# The base ClusterRole this chart creates covers pods/nodes/ingresses; add
+# read on the metrics API (cluster/node CPU + memory) and Traefik
+# IngressRoutes so service discovery/health works with our ingress.
+extraClusterRoles:
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+      - pods
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - traefik.io
+    resources:
+      - ingressroutes
+    verbs:
+      - get
+      - list
+
+# Service is fronted by our own Traefik IngressRoute (ingressroute.yaml),
+# so the chart's ingress stays off. Container/Service port is 3000.
+service:
+  main:
+    ports:
+      http:
+        port: 3000
+
+ingress:
+  main:
+    enabled: false
+
+# Required since homepage v1.0 — requests whose Host header is not listed are
+# rejected. Cloudflare/Traefik forward the original home.fomiller.com host.
+env:
+  - name: HOMEPAGE_ALLOWED_HOSTS
+    value: home.fomiller.com
+
+config:
+  # Go/Helm's toYaml sorts map keys, which would reorder the layout groups —
+  # settingsString preserves the intended top-to-bottom ordering.
+  settingsString: |
+    title: Fomiller Homelab
+    theme: dark
+    color: slate
+    headerStyle: boxedWidgets
+    layout:
+      Infrastructure:
+        style: row
+        columns: 4
+      Observability:
+        style: row
+        columns: 3
+      Data & Streaming:
+        style: row
+        columns: 2
+
+  kubernetes:
+    mode: cluster
+
+  widgets:
+    # Live cluster stats — needs enableRbac above and metrics-server.
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: cluster
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+          hourCycle: h23
+
+  # href      -> public URL (behind Cloudflare Access at the edge)
+  # siteMonitor -> in-cluster Service URL, so the status dot reflects real
+  #                pod health and is not tripped up by the Access login wall.
+  # Widgets that need API tokens (Grafana, ArgoCD) are left as plain links;
+  # add a `widget:` block with a token via external-secrets when wanted.
+  services:
+    - Infrastructure:
+        - ArgoCD:
+            icon: argocd.png
+            href: https://argocd.fomiller.com
+            description: GitOps continuous delivery
+            siteMonitor: http://argocd-server.argocd.svc.cluster.local
+        - Authentik:
+            icon: authentik.png
+            href: https://authentik.fomiller.com
+            description: Identity provider / SSO
+            siteMonitor: http://authentik-server.authentik.svc.cluster.local
+        - Traefik:
+            icon: traefik.png
+            description: Ingress controller / edge router
+            siteMonitor: http://traefik.traefik.svc.cluster.local:80
+        - Longhorn:
+            icon: longhorn.png
+            href: https://longhorn.fomiller.com
+            description: Distributed block storage
+            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
+            widget:
+              type: longhorn
+              url: http://longhorn-frontend.longhorn-system.svc.cluster.local
+
+    - Observability:
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.fomiller.com
+            description: Dashboards & visualization
+            siteMonitor: http://prometheus-grafana.monitoring.svc.cluster.local
+        - Prometheus:
+            icon: prometheus.png
+            description: Metrics & alerting
+            siteMonitor: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+            widget:
+              type: prometheus
+              url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        - Loki:
+            icon: loki.png
+            description: Log aggregation
+            siteMonitor: http://loki-gateway.monitoring.svc.cluster.local:80
+
+    - Data & Streaming:
+        - Redpanda Console:
+            icon: redpanda.png
+            href: https://redpanda.fomiller.com
+            description: Kafka-compatible streaming console
+            siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
+
+  bookmarks:
+    - Homelab:
+        - Repository:
+            - abbr: GH
+              href: https://github.com/Fomiller/homelab
+        - Cloudflare Zero Trust:
+            - abbr: CF
+              href: https://one.dash.cloudflare.com
+
+  # Explicitly empty — no Docker socket integration in-cluster.
+  docker:

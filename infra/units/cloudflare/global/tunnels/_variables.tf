@@ -50,6 +50,7 @@ variable "allowed_emails" {
 variable "protected_hostnames" {
   type = list(string)
   default = [
+    "home.fomiller.com",
     "argocd.fomiller.com",
     "grafana.fomiller.com",
     "longhorn.fomiller.com",
