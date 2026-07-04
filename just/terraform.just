@@ -57,7 +57,7 @@ apply dir:
 apply-all:
     doppler run \
     --name-transformer tf-var  \
-    -- terragrunt stack run --tf-path terraform \
+    -- terragrunt --non-interactive stack run --tf-path terraform \
     --working-dir {{infraDir}} \
     apply
 
@@ -91,7 +91,7 @@ destroy-target dir target:
 destroy-all:
     doppler run \
     --name-transformer tf-var  \
-    -- terragrunt stack run --tf-path terraform \
+    -- terragrunt --non-interactive stack run --tf-path terraform \
     --working-dir {{infraDir}} \
     destroy
 

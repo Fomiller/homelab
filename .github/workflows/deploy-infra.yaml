@@ -48,7 +48,7 @@ jobs:
     name: 'Plan Infra (dev)'
     if: ${{ github.event_name == 'pull_request' }}
     needs: Pre-check
-    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@homelab-terragrunt-stacks-plan-apply
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
     with:
       environment: dev
       infra-dir: infra/live/dev
@@ -62,7 +62,7 @@ jobs:
     name: 'Apply Infra (dev)'
     if: ${{ github.event_name == 'push' }}
     needs: Pre-check
-    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@homelab-terragrunt-stacks-plan-apply
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
     with:
       environment: dev
       infra-dir: infra/live/dev
