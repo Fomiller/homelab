@@ -20,3 +20,17 @@ variable "forrest_email" {
   type    = string
   default = "forrestmillerj@gmail.com"
 }
+
+# Optional — Google federated login into authentik (see google-source.tf).
+# Leave unset to keep the source dormant. Doppler secret names:
+# AUTHENTIK_GOOGLE_CLIENT_ID, AUTHENTIK_GOOGLE_CLIENT_SECRET.
+variable "authentik_google_client_id" {
+  type    = string
+  default = ""
+}
+
+variable "authentik_google_client_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
