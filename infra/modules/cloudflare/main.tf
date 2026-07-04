@@ -63,3 +63,75 @@ resource "aws_secretsmanager_secret_version" "cloudflare_tunnel_creds" {
     tunnel_token = data.cloudflare_zero_trust_tunnel_cloudflared_token.this.token
   })
 }
+
+resource "cloudflare_zero_trust_access_identity_provider" "onetimepin" {
+  account_id = var.cloudflare_account_id
+  name       = "One-time PIN"
+  type       = "onetimepin"
+  config     = {}
+}
+
+# Dormant until google_oauth_client_id/secret are set — kept wired in so
+# switching to Google sign-in later is just filling in the Doppler secrets.
+resource "cloudflare_zero_trust_access_identity_provider" "google" {
+  count      = var.google_oauth_client_id != "" ? 1 : 0
+  account_id = var.cloudflare_account_id
+  name       = "Google"
+  type       = "google"
+  config = {
+    client_id     = var.google_oauth_client_id
+    client_secret = var.google_oauth_client_secret
+  }
+}
+
+# Dormant until github_oauth_client_id/secret are set — same deferred
+# pattern as the google identity provider above.
+resource "cloudflare_zero_trust_access_identity_provider" "github" {
+  count      = var.github_oauth_client_id != "" ? 1 : 0
+  account_id = var.cloudflare_account_id
+  name       = "GitHub"
+  type       = "github"
+  config = {
+    client_id     = var.github_oauth_client_id
+    client_secret = var.github_oauth_client_secret
+  }
+}
+
+resource "cloudflare_zero_trust_access_policy" "allow" {
+  account_id = var.cloudflare_account_id
+  name       = "Allow homelab admins"
+  decision   = "allow"
+  include = [
+    for email in var.allowed_emails : { email = { email = email } }
+  ]
+}
+
+# One Access application covering every hostname in var.protected_hostnames
+# — sits in front of the tunnel at Cloudflare's edge, so unauthenticated
+# requests never reach Traefik/the origin at all. `domain` is just the
+# primary/display hostname; `destinations` is what's actually enforced
+# (self_hosted_domains, the old multi-hostname field, is deprecated).
+resource "cloudflare_zero_trust_access_application" "protected" {
+  account_id       = var.cloudflare_account_id
+  name             = "Homelab Admin Apps"
+  domain           = var.protected_hostnames[0]
+  type             = "self_hosted"
+  session_duration = "24h"
+  allowed_idps = concat(
+    [cloudflare_zero_trust_access_identity_provider.onetimepin.id],
+    cloudflare_zero_trust_access_identity_provider.google[*].id,
+    cloudflare_zero_trust_access_identity_provider.github[*].id
+  )
+
+  destinations = [
+    for hostname in var.protected_hostnames : {
+      type = "public"
+      uri  = hostname
+    }
+  ]
+
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.allow.id
+    precedence = 1
+  }]
+}
