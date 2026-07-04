@@ -1,0 +1,37 @@
+# .github/workflows/deploy-authentik-access.yaml
+
+name: 'Terragrunt Deploy - Authentik Access'
+
+# workflow_dispatch on top of the usual path trigger: this module talks to
+# the live authentik API at authentik.fomiller.com, so its first run will
+# fail until infra/modules/authentik is applied AND ArgoCD has
+# k8s/apps/authentik up and serving — kick it manually once that's true.
+on:
+  push:
+    paths:
+      - '.github/workflows/deploy-authentik-access.yaml'
+      - 'infra/modules/authentik-access/**'
+      - 'justfile'
+  workflow_dispatch:
+
+jobs:
+  Pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: 'true'
+          concurrent_skipping: 'same_content_newer'
+
+  Deploy-infra:
+    name: 'Deploy Authentik Access Infra'
+    needs: Pre-check
+    uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
+    with:
+      environment: dev
+      infra-dir: infra/modules/authentik-access
+      doppler-project: homelab
+    secrets: inherit
