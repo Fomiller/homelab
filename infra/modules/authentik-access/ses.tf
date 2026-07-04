@@ -11,6 +11,19 @@ resource "aws_ses_domain_dkim" "this" {
   domain = aws_ses_domain_identity.this.domain
 }
 
+# While the account is in the SES sandbox, delivery only succeeds to
+# verified recipient identities — AWS emails each address a confirmation
+# link on creation, which the recipient has to click before mail actually
+# lands. Add an entry here per person invited while still sandboxed;
+# unnecessary once SES production access is granted.
+resource "aws_ses_email_identity" "forrest" {
+  email = var.forrest_email
+}
+
+resource "aws_ses_email_identity" "grayson" {
+  email = var.grayson_email
+}
+
 resource "cloudflare_dns_record" "ses_verification" {
   zone_id = data.cloudflare_zone.this.id
   name    = "_amazonses.${var.zone_name}"
@@ -50,11 +63,16 @@ resource "aws_iam_user" "authentik_ses" {
   name = "FomillerAuthentikSes"
 }
 
+# Resource = "*" is deliberate, not a lazy wildcard: while the account is in
+# the SES sandbox, sending checks IAM authorization against the *recipient*
+# identity too (not just the sender), and recipients aren't known ARNs ahead
+# of time — scoping this to just the domain identity produces
+# "Access denied ... on resource identity/<recipient>" 554s for every send.
 data "aws_iam_policy_document" "authentik_ses_send" {
   statement {
     effect    = "Allow"
     actions   = ["ses:SendEmail", "ses:SendRawEmail"]
-    resources = [aws_ses_domain_identity.this.arn]
+    resources = ["*"]
   }
 }
 
