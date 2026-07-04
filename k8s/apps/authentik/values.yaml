@@ -1,0 +1,42 @@
+# Non-secret authentik config (secret_key, postgresql password, bootstrap
+# creds) is injected via global.env below instead of authentik.secret_key /
+# authentik.postgresql.password, so nothing sensitive lives in this file.
+# Left "" here, those keys are simply skipped by the chart's generated
+# config secret (see templates/_helpers.tpl authentik.env), and the
+# global.env entries below are the only source — explicit `env:` entries
+# always win over `envFrom:`-sourced ones with the same name.
+global:
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: secret_key
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: password
+    - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: bootstrap_password
+    - name: AUTHENTIK_BOOTSTRAP_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: bootstrap_token
+    - name: AUTHENTIK_BOOTSTRAP_EMAIL
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: bootstrap_email
+
+# Bundled bitnami postgresql subchart — auth.username/auth.database already
+# default to "authentik"/"authentik", matching authentik.postgresql.user/name
+# chart defaults, so only the password wiring needs to be set here.
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: authentik-secrets

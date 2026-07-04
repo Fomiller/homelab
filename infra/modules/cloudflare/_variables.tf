@@ -42,3 +42,19 @@ variable "github_oauth_client_secret" {
   sensitive = true
   default   = ""
 }
+
+# Optional — authentik as an in-cluster OIDC sign-in option, same deferred
+# pattern as Google/GitHub above. Leave unset until infra/modules/authentik-access
+# has created the OAuth2 provider/application against a running authentik
+# instance. Doppler secret names: AUTHENTIK_OAUTH_CLIENT_ID,
+# AUTHENTIK_OAUTH_CLIENT_SECRET (copied from that module's outputs).
+variable "authentik_oauth_client_id" {
+  type    = string
+  default = ""
+}
+
+variable "authentik_oauth_client_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
