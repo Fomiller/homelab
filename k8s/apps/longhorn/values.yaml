@@ -1,8 +1,13 @@
+# 2 replicas, not 3 — only two nodes (talos-6d8-hfw, talos-ewm-ql7) have
+# Longhorn storage, so a third replica would have nowhere to schedule.
+# Note: these settings only apply to newly provisioned volumes; existing
+# volumes keep their count until patched (spec.numberOfReplicas on
+# volumes.longhorn.io in longhorn-system).
 defaultSettings:
-  defaultReplicaCount: 1
+  defaultReplicaCount: 2
 persistence:
   reclaimPolicy: Retain
-  defaultClassReplicaCount: 1
+  defaultClassReplicaCount: 2
 # # Default values for longhorn.
 # # This is a YAML-formatted file.
 # # Declare variables to be passed into your templates.
