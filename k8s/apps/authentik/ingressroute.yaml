@@ -1,3 +1,18 @@
+# Cloudflare terminates TLS at the edge and the tunnel delivers plain HTTP,
+# and Traefik overwrites Cloudflare's X-Forwarded-Proto since cloudflared
+# isn't a trusted forwarder — so without this override authentik sees
+# scheme http while the browser Origin is https, and Django rejects the
+# UI's own API calls (goauthentik/authentik#2060).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: authentik-forwarded-proto
+  namespace: authentik
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: https
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -9,6 +24,8 @@ spec:
   routes:
     - match: Host(`authentik.fomiller.com`)
       kind: Rule
+      middlewares:
+        - name: authentik-forwarded-proto
       services:
         - name: authentik-server
           port: 80
