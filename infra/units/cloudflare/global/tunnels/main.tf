@@ -40,19 +40,6 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this.id
 }
 
-# Dormant until github_oauth_client_id/secret are set — same deferred
-# pattern as the authentik identity provider below.
-resource "cloudflare_zero_trust_access_identity_provider" "github" {
-  count      = var.github_oauth_client_id != "" ? 1 : 0
-  account_id = var.cloudflare_account_id
-  name       = "GitHub"
-  type       = "github"
-  config = {
-    client_id     = var.github_oauth_client_id
-    client_secret = var.github_oauth_client_secret
-  }
-}
-
 locals {
   # authentik.<zone_name> is covered by the *.zone_name wildcard tunnel
   # ingress above — it deliberately stays out of var.protected_hostnames,
@@ -61,9 +48,8 @@ locals {
   authentik_base_url = "https://authentik.${var.zone_name}"
 }
 
-# Dormant until authentik_oauth_client_id/secret are set — same deferred
-# pattern as GitHub above, except this IdP is the in-cluster authentik
-# instance (authentik/global/access) instead of a third party.
+# Dormant until authentik_oauth_client_id/secret are set — created once
+# authentik/global/access has provisioned the OAuth2 client for this app.
 resource "cloudflare_zero_trust_access_identity_provider" "authentik" {
   count      = var.authentik_oauth_client_id != "" ? 1 : 0
   account_id = var.cloudflare_account_id
@@ -101,10 +87,7 @@ resource "cloudflare_zero_trust_access_application" "protected" {
   domain           = var.protected_hostnames[0]
   type             = "self_hosted"
   session_duration = "168h"
-  allowed_idps = concat(
-    cloudflare_zero_trust_access_identity_provider.github[*].id,
-    cloudflare_zero_trust_access_identity_provider.authentik[*].id
-  )
+  allowed_idps = cloudflare_zero_trust_access_identity_provider.authentik[*].id
 
   destinations = [
     for hostname in var.protected_hostnames : {

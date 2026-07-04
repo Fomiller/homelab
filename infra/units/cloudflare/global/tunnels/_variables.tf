@@ -57,26 +57,11 @@ variable "protected_hostnames" {
   ]
 }
 
-# Optional — GitHub sign-in, same deferred pattern. Doppler secret
-# names: GITHUB_OAUTH_CLIENT_ID, GITHUB_OAUTH_CLIENT_SECRET. Redirect URI to
-# register in GitHub (Settings > Developer settings > OAuth Apps):
-# https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
-variable "github_oauth_client_id" {
-  type    = string
-  default = ""
-}
-
-variable "github_oauth_client_secret" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
-
-# Optional — authentik as an in-cluster OIDC sign-in option, same deferred
-# pattern as Google/GitHub above. Leave unset until authentik/global/access
-# has created the OAuth2 provider/application against a running authentik
-# instance. Doppler secret names: AUTHENTIK_OAUTH_CLIENT_ID,
-# AUTHENTIK_OAUTH_CLIENT_SECRET (copied from that unit's outputs).
+# Optional — authentik as an in-cluster OIDC sign-in option. Leave unset
+# until authentik/global/access has created the OAuth2 provider/application
+# against a running authentik instance. Doppler secret names:
+# AUTHENTIK_OAUTH_CLIENT_ID, AUTHENTIK_OAUTH_CLIENT_SECRET (copied from that
+# unit's outputs).
 variable "authentik_oauth_client_id" {
   type    = string
   default = ""
