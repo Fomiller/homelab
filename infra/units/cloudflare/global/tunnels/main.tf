@@ -40,28 +40,8 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this.id
 }
 
-resource "cloudflare_zero_trust_access_identity_provider" "onetimepin" {
-  account_id = var.cloudflare_account_id
-  name       = "One-time PIN"
-  type       = "onetimepin"
-  config     = {}
-}
-
-# Dormant until cloudflare_google_oauth_client_id/secret are set — kept wired
-# in so switching to Google sign-in later is just filling in the Doppler secrets.
-resource "cloudflare_zero_trust_access_identity_provider" "google" {
-  count      = var.cloudflare_google_oauth_client_id != "" ? 1 : 0
-  account_id = var.cloudflare_account_id
-  name       = "Google"
-  type       = "google"
-  config = {
-    client_id     = var.cloudflare_google_oauth_client_id
-    client_secret = var.cloudflare_google_oauth_client_secret
-  }
-}
-
 # Dormant until github_oauth_client_id/secret are set — same deferred
-# pattern as the google identity provider above.
+# pattern as the authentik identity provider below.
 resource "cloudflare_zero_trust_access_identity_provider" "github" {
   count      = var.github_oauth_client_id != "" ? 1 : 0
   account_id = var.cloudflare_account_id
@@ -82,8 +62,8 @@ locals {
 }
 
 # Dormant until authentik_oauth_client_id/secret are set — same deferred
-# pattern as Google/GitHub above, except this IdP is the in-cluster
-# authentik instance (authentik/global/access) instead of a third party.
+# pattern as GitHub above, except this IdP is the in-cluster authentik
+# instance (authentik/global/access) instead of a third party.
 resource "cloudflare_zero_trust_access_identity_provider" "authentik" {
   count      = var.authentik_oauth_client_id != "" ? 1 : 0
   account_id = var.cloudflare_account_id
@@ -122,8 +102,6 @@ resource "cloudflare_zero_trust_access_application" "protected" {
   type             = "self_hosted"
   session_duration = "168h"
   allowed_idps = concat(
-    [cloudflare_zero_trust_access_identity_provider.onetimepin.id],
-    cloudflare_zero_trust_access_identity_provider.google[*].id,
     cloudflare_zero_trust_access_identity_provider.github[*].id,
     cloudflare_zero_trust_access_identity_provider.authentik[*].id
   )

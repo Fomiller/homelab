@@ -34,8 +34,8 @@ variable "tunnel_target_service" {
   default = "http://traefik.traefik.svc.cluster.local:80"
 }
 
-# Emails allowed through the Cloudflare Access login wall (via one-time-PIN
-# for now). Same policy applies to every hostname in var.protected_hostnames.
+# Emails allowed through the Cloudflare Access login wall (via authentik).
+# Same policy applies to every hostname in var.protected_hostnames.
 variable "allowed_emails" {
   type = list(string)
   default = [
@@ -57,25 +57,7 @@ variable "protected_hostnames" {
   ]
 }
 
-# Optional — Google sign-in directly on the Cloudflare Access login wall
-# (distinct from AUTHENTIK_GOOGLE_* in authentik/global/access, which
-# federates Google *into* authentik). Leave unset to skip; the google
-# identity provider resource only gets created once both are non-empty.
-# Doppler secret names: CLOUDFLARE_GOOGLE_OAUTH_CLIENT_ID,
-# CLOUDFLARE_GOOGLE_OAUTH_CLIENT_SECRET. Redirect URI to register in Google
-# Cloud Console: https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
-variable "cloudflare_google_oauth_client_id" {
-  type    = string
-  default = ""
-}
-
-variable "cloudflare_google_oauth_client_secret" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
-
-# Optional — GitHub sign-in, same deal as Google above. Doppler secret
+# Optional — GitHub sign-in, same deferred pattern. Doppler secret
 # names: GITHUB_OAUTH_CLIENT_ID, GITHUB_OAUTH_CLIENT_SECRET. Redirect URI to
 # register in GitHub (Settings > Developer settings > OAuth Apps):
 # https://<your-zero-trust-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
