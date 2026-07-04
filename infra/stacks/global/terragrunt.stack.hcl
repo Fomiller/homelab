@@ -178,15 +178,29 @@ unit "access" {
       mock_outputs_merge_strategy_with_state   = "shallow"
       mock_outputs_allowed_terraform_commands  = ["validate", "plan", "apply", "destroy", "init"]
       mock_outputs = {
-        bootstrap_token  = "MOCK-bootstrap-token"
-        forrest_password = "MOCK-forrest-password"
-        grayson_password = "MOCK-grayson-password"
+        bootstrap_token = "MOCK-bootstrap-token"
+        user_metadata = {
+          forrest = {
+            email = "forrestmillerj@gmail.com"
+            name  = "Forrest Miller"
+            admin = true
+          }
+          grayson = {
+            email = "millergrayson0@gmail.com"
+            name  = "Grayson Miller"
+            admin = false
+          }
+        }
+        user_passwords = {
+          forrest = "MOCK-forrest-password"
+          grayson = "MOCK-grayson-password"
+        }
       }
     }
     inputs = {
       authentik_bootstrap_token = dependency.secrets.outputs.bootstrap_token
-      forrest_password          = dependency.secrets.outputs.forrest_password
-      grayson_password          = dependency.secrets.outputs.grayson_password
+      user_metadata             = dependency.secrets.outputs.user_metadata
+      user_passwords            = dependency.secrets.outputs.user_passwords
     }
   }
 }

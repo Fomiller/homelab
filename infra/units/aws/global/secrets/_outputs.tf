@@ -3,12 +3,17 @@ output "bootstrap_token" {
   sensitive = true
 }
 
-output "forrest_password" {
-  value     = random_password.forrest.result
-  sensitive = true
+# Echoed back (not sensitive) so authentik/global/access can for_each over
+# the same set of people without redeclaring var.users there — Terraform
+# won't allow for_each over a sensitive map, so passwords travel separately
+# via user_passwords below.
+output "user_metadata" {
+  value = var.users
 }
 
-output "grayson_password" {
-  value     = random_password.grayson.result
+output "user_passwords" {
+  value = {
+    for username, user in var.users : username => random_password.user[username].result
+  }
   sensitive = true
 }
