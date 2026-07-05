@@ -135,6 +135,8 @@ config:
         nodes: true
     - openweathermap:
         label: Home
+        latitude: 36.1627
+        longitude: -86.7816
         units: imperial
         cache: 5
         apiKey: "{{HOMEPAGE_VAR_OPEN_WEATHER_API_KEY}}"
