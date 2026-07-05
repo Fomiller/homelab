@@ -1,7 +1,7 @@
 {
   "appName": "homepage",
   "userGivenName": "homepage",
-  "destNamespace": "default",
+  "destNamespace": "homepage",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "k8s/apps/homepage",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",
