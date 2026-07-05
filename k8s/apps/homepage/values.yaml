@@ -74,6 +74,7 @@ config:
     theme: dark
     color: slate
     headerStyle: boxedWidgets
+    useEqualHeights: true
     layout:
       Infrastructure:
         style: row
