@@ -1,0 +1,11 @@
+{
+  "appName": "supabase",
+  "userGivenName": "supabase",
+  "destNamespace": "supabase",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/supabase",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}

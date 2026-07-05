@@ -1,0 +1,83 @@
+# Deployed as a database admin UI (Studio + postgres-meta) in front of the
+# chart's bundled Postgres, not the full Supabase backend-as-a-service stack.
+# Auth/REST/Realtime/Storage/Edge-Functions/Analytics/Vector/Imgproxy are all
+# disabled - other apps that need to hit this database do so with a normal
+# Postgres connection (supabase-supabase-db.supabase.svc.cluster.local:5432),
+# not through Supabase's client libraries or API gateway.
+#
+# Kong stays on purely as the basic-auth gate in front of Studio (see
+# secret.dashboard below) - cheap, stateless, and it's what the chart already
+# wires Studio's SUPABASE_URL to expect.
+#
+# Future path to CloudNativePG: swap deployment.db.enabled to false, point
+# secret.db.host/port (or secret.db.secretRef with host/port keys mapped) at
+# the CNPG cluster's Service, and keep secret.db.password/database aligned
+# with whatever role CNPG provisions. Studio/meta only ever talk to
+# "the database", not to the chart's StatefulSet specifically.
+deployment:
+  auth:
+    enabled: false
+  rest:
+    enabled: false
+  realtime:
+    enabled: false
+  storage:
+    enabled: false
+  functions:
+    enabled: false
+  analytics:
+    enabled: false
+  vector:
+    enabled: false
+  imgproxy:
+    enabled: false
+
+secret:
+  # Real credentials, sourced from Doppler via external-secrets.yaml. Every
+  # key referenced here (including the non-sensitive ones like the database
+  # name) must exist in the supabase-secrets Secret - db/postgres-meta/studio
+  # pull them via secretKeyRef unconditionally once secretRef is set, with no
+  # literal-value fallback. external-secrets.yaml fills the non-sensitive
+  # ones (db-database, dashboard-openai-key) in via a literal template
+  # instead of a Doppler round-trip.
+  db:
+    secretRef: supabase-secrets
+    secretRefKey:
+      password: db-password
+      database: db-database
+
+  meta:
+    secretRef: supabase-secrets
+    secretRefKey:
+      cryptoKey: meta-crypto-key
+
+  dashboard:
+    secretRef: supabase-secrets
+    secretRefKey:
+      username: dashboard-username
+      password: dashboard-password
+      openAiApiKey: dashboard-openai-key
+
+  # jwt/apikey/smtp/s3/analytics/realtime/bigquery are left at the chart's
+  # packaged placeholder values - nothing reads them for real since Auth,
+  # REST, Realtime, Storage and Analytics are all disabled above.
+
+environment:
+  studio:
+    SUPABASE_PUBLIC_URL: https://supabase.fomiller.com
+    DEFAULT_ORGANIZATION_NAME: fomiller
+    DEFAULT_PROJECT_NAME: homelab
+
+persistence:
+  db:
+    storageClassName: longhorn
+    size: 10Gi
+  pgsodium:
+    storageClassName: longhorn
+  snippets:
+    storageClassName: longhorn
+
+# Fronted by our own Traefik IngressRoute (ingressroute.yaml) -> Kong, so the
+# chart's own ingress stays off.
+ingress:
+  enabled: false
