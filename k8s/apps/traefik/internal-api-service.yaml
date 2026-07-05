@@ -1,0 +1,18 @@
+# ClusterIP-only access to Traefik's "traefik" entrypoint (port 8080),
+# where internal-api-ingressroute.yaml routes /api/* without a Host match.
+# Deliberately not the LoadBalancer service, so this is never reachable
+# outside the cluster network.
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-internal-api
+  namespace: traefik
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/name: traefik
+  ports:
+    - name: traefik
+      port: 8080
+      targetPort: 8080

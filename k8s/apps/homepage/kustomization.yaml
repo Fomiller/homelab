@@ -6,6 +6,17 @@ namespace: homepage
 resources:
 - namespace.yaml
 - ingressroute.yaml
+- external-secrets.yaml
+
+# Custom service icons not in the bundled dashboard-icons pack (e.g. redpanda),
+# mounted into the homepage pod at /app/public/icons via persistence.custom-icons
+# in values.yaml and referenced in config as icon: /icons/<file>.
+configMapGenerator:
+- name: homepage-custom-icons
+  files:
+  - icons/redpanda.png
+  options:
+    disableNameSuffixHash: true
 
 helmCharts:
 - name: homepage

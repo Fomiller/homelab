@@ -1,0 +1,5 @@
+# Talos kubelets use self-signed serving certs, so metrics-server can't
+# verify them against the cluster CA — kubelet-insecure-tls skips that
+# check for the kubelet metrics scrape (still over TLS, just unverified).
+args:
+  - --kubelet-insecure-tls

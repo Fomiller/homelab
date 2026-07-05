@@ -14,6 +14,14 @@ variable "tailscale_operator_client_secret" {
   type = string
 }
 
+# Doppler Service Account API token (viewer, all projects) used by
+# homepage's ExternalSecret/SecretStore to read the "homepage" project's
+# HOMEPAGE_VAR_* secrets directly from Doppler. Doppler secret name:
+# ESO_DOPPLER_SA_TOKEN.
+variable "eso_doppler_sa_token" {
+  type = string
+}
+
 # Sourced from Doppler (project "homelab"), same pattern as the other
 # modules. Doppler secret name: AUTHENTIK_BOOTSTRAP_EMAIL.
 variable "bootstrap_email" {

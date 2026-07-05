@@ -1,0 +1,20 @@
+# Routes to Traefik's internal API by PathPrefix only (no Host match), on
+# the dedicated "traefik" entrypoint (port 8080, chart default: not exposed
+# on the public LoadBalancer). This lets in-cluster clients like the
+# homepage widget call /api/* via internal-api-service.yaml without needing
+# to match the human-facing dashboard.localhost Host used by the chart's own
+# ingressRoute.dashboard (see values.yaml).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-internal-api
+  namespace: traefik
+spec:
+  entryPoints:
+    - traefik
+  routes:
+    - match: PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService

@@ -48,6 +48,24 @@ env:
   - name: HOMEPAGE_ALLOWED_HOSTS
     value: home.fomiller.com
 
+# Secret-backed widget credentials, synced from Doppler via external-secrets'
+# native Doppler provider (see external-secrets.yaml). Keys are pre-named
+# HOMEPAGE_VAR_* in Doppler itself so no rewriting is needed here — homepage
+# exposes any HOMEPAGE_VAR_x env var as the {{HOMEPAGE_VAR_x}} template in
+# config.
+envFrom:
+  - secretRef:
+      name: homepage-secrets
+
+# Custom icon(s) not in the bundled dashboard-icons pack (see kustomization.yaml
+# configMapGenerator), mounted read-only at the path homepage serves /icons/ from.
+persistence:
+  custom-icons:
+    enabled: true
+    type: configMap
+    name: homepage-custom-icons
+    mountPath: /app/public/icons
+
 config:
   # Go/Helm's toYaml sorts map keys, which would reorder the layout groups —
   # settingsString preserves the intended top-to-bottom ordering.
@@ -59,13 +77,18 @@ config:
     layout:
       Infrastructure:
         style: row
-        columns: 4
+        columns: 5
       Observability:
         style: row
         columns: 3
       Data & Streaming:
         style: row
         columns: 2
+
+    # Credentials/URL for the top-level longhorn info widget below.
+    providers:
+      longhorn:
+        url: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
   kubernetes:
     mode: cluster
@@ -84,8 +107,22 @@ config:
           cpu: true
           memory: true
           showLabel: true
+    # Homepage pod's own container resource usage, for comparison against
+    # the cluster-wide kubernetes widget above.
+    - resources:
+        label: Homepage Pod
+        cpu: true
+        memory: true
+    # Aggregate Longhorn storage utilization. This is an info widget (not a
+    # per-service widget) — credentials/url come from settingsString's
+    # providers.longhorn above.
+    - longhorn:
+        expanded: true
+        total: true
+        labels: true
+        nodes: true
     - search:
-        provider: duckduckgo
+        provider: google
         target: _blank
     - datetime:
         text_size: xl
@@ -93,6 +130,15 @@ config:
           dateStyle: long
           timeStyle: short
           hourCycle: h23
+    - calendar:
+        firstDayInWeek: sunday
+        view: monthly
+        maxEvents: 10
+        integrations:
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL}}"
+            name: Gmail Calendar
+            color: blue
 
   # href      -> public URL (behind Cloudflare Access at the edge)
   # siteMonitor -> in-cluster Service URL, so the status dot reflects real
@@ -102,7 +148,7 @@ config:
   services:
     - Infrastructure:
         - ArgoCD:
-            icon: argocd.png
+            icon: argo-cd.png
             href: https://argocd.fomiller.com
             description: GitOps continuous delivery
             siteMonitor: http://argocd-server.argocd.svc.cluster.local
@@ -115,14 +161,22 @@ config:
             icon: traefik.png
             description: Ingress controller / edge router
             siteMonitor: http://traefik.traefik.svc.cluster.local:80
+            widget:
+              type: traefik
+              url: http://traefik-internal-api.traefik.svc.cluster.local:8080
         - Longhorn:
             icon: longhorn.png
             href: https://longhorn.fomiller.com
             description: Distributed block storage
             siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
+        - Tailscale:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
             widget:
-              type: longhorn
-              url: http://longhorn-frontend.longhorn-system.svc.cluster.local
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TAILSCALE_DEVICEID}}"
+              key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
 
     - Observability:
         - Grafana:
@@ -144,16 +198,22 @@ config:
 
     - Data & Streaming:
         - Redpanda Console:
-            icon: redpanda.png
+            # Redpanda isn't in the bundled dashboard-icons pack; served from
+            # our own custom-icons ConfigMap (see kustomization.yaml).
+            icon: /icons/redpanda.png
             href: https://redpanda.fomiller.com
             description: Kafka-compatible streaming console
             siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
 
   bookmarks:
-    - Homelab:
-        - Repository:
+    - Github:
+        - Homelab:
             - abbr: GH
               href: https://github.com/Fomiller/homelab
+    - Services:
+        - Cloudflare:
+            - abbr: CF
+              href: https://dash.cloudflare.com
         - Cloudflare Zero Trust:
             - abbr: CF
               href: https://one.dash.cloudflare.com
