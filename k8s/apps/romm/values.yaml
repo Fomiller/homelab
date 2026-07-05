@@ -1,0 +1,98 @@
+# Pinned to the chart's tested appVersion for reproducible syncs.
+image:
+  repository: ghcr.io/rommapp/romm
+  tag: 3.8@sha256:9a732c9efb4ea70d6cc5818c7d732a4a990fd06b3e1e90600023459942270463
+
+# DB_PASSWD/REDIS_PASSWORD/ROMM_AUTH_SECRET_KEY pull from the same
+# romm-secrets Secret (see external-secrets.yaml) that mariadb.auth /
+# redis.auth below also read, so both sides always agree.
+env:
+  ROMM_BASE_PATH: /romm
+  ROMM_BASE_URL: https://romm.fomiller.com
+  TZ: America/Chicago
+
+  # Literal Service name, not a helper-template lookup — the chart's own
+  # default value (`{{ template "mariadb.fullname" .Subcharts.mariadb }}`)
+  # references a template name the pinned bitnami mariadb chart doesn't
+  # define, and fails to render. Confirmed against the actual rendered
+  # Service name for releaseName romm / standalone architecture.
+  DB_HOST: romm-mariadb
+  DB_PORT: 3306
+  DB_NAME: romm
+  DB_USER: romm
+  DB_PASSWD:
+    secretKeyRef:
+      name: romm-secrets
+      key: mariadb-password
+
+  # Same reasoning as DB_HOST above — literal master Service name for the
+  # bundled bitnami redis subchart (default replication architecture).
+  REDIS_HOST: romm-redis-master
+  REDIS_PORT: 6379
+  REDIS_PASSWORD:
+    secretKeyRef:
+      name: romm-secrets
+      key: redis-password
+
+  ROMM_AUTH_SECRET_KEY:
+    secretKeyRef:
+      name: romm-secrets
+      key: ROMM_AUTH_SECRET_KEY
+
+# Bundled bitnami mariadb/redis subcharts.
+mariadb:
+  enabled: true
+  auth:
+    database: romm
+    username: romm
+    existingSecret: romm-secrets
+
+redis:
+  enabled: true
+  auth:
+    existingSecret: romm-secrets
+    existingSecretPasswordKey: redis-password
+
+service:
+  main:
+    ports:
+      # Chart's own default values.yaml calls this port "main" (bug — written
+      # for a newer common-library version); the pinned chart's actual
+      # container port name is "http", confirmed against the rendered
+      # manifest.
+      http:
+        port: 10680
+        targetPort: 8080
+
+# Fronted by our own Traefik IngressRoute (ingressroute.yaml), so the
+# chart's own ingress stays off.
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  assets:
+    enabled: true
+    mountPath: /romm/assets
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 5Gi
+  config:
+    enabled: true
+    mountPath: /romm/config
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  library:
+    enabled: true
+    mountPath: /romm/library
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    # Starting small — bump later (Longhorn PVCs expand in place).
+    size: 10Gi
+  resources:
+    enabled: true
+    mountPath: /romm/resources
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 5Gi

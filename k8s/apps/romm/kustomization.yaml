@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: romm
+
+resources:
+- namespace.yaml
+- external-secrets.yaml
+- ingressroute.yaml
+
+helmCharts:
+- name: romm
+  repo: https://retsamedoc.github.io/helm-charts
+  releaseName: romm
+  includeCRDs: true
+  # Pinned below the latest (2026.2.3) — that version bumped the bundled
+  # common library to bjw-s v4.6.2, which renamed its template entrypoints
+  # (common.* -> bjw-s.common.*) that this chart's own templates/common.yaml
+  # still calls as "common.all", making it fail to render entirely.
+  version: 2025.3.1
+  namespace: romm
+  valuesFile: values.yaml
