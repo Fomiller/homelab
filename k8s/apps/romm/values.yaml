@@ -40,8 +40,20 @@ env:
       key: ROMM_AUTH_SECRET_KEY
 
 # Bundled bitnami mariadb/redis subcharts.
+# image.repository overridden to bitnamilegacy/* — bitnami pulled all
+# non-"latest" tags off docker.io/bitnami/* (Aug 2025 registry split) and
+# moved them to docker.io/bitnamilegacy/*; the chart's pinned tags 404 on
+# the old repo path otherwise. global.security.allowInsecureImages is
+# required too — bitnami's charts now hard-fail on any non-default image
+# reference unless this is set.
+global:
+  security:
+    allowInsecureImages: true
+
 mariadb:
   enabled: true
+  image:
+    repository: bitnamilegacy/mariadb
   auth:
     database: romm
     username: romm
@@ -49,6 +61,8 @@ mariadb:
 
 redis:
   enabled: true
+  image:
+    repository: bitnamilegacy/redis
   auth:
     existingSecret: romm-secrets
     existingSecretPasswordKey: redis-password
