@@ -89,8 +89,24 @@ locals {
       nodeLabels = {
         "node.kubernetes.io/exclude-from-external-load-balancers" = ""
       }
+      # Same iSCSI/nbd kernel modules as workers — controlplane nodes are now
+      # schedulable (see cluster.allowSchedulingOnControlPlanes below) and run
+      # Longhorn replicas too, so they need the same storage module support.
+      kernel = {
+        modules = [
+          { name = "nbd" },
+          { name = "iscsi_tcp" },
+          { name = "iscsi_generic" },
+          { name = "configfs" },
+        ]
+      }
     })
     cluster = merge(local.common_machine_patch.cluster, {
+      # Only 2 real worker nodes exist; letting the 3 controlplane nodes take
+      # workload pods too spreads Longhorn/app load instead of leaving them
+      # idle while the 2 workers get overloaded (root cause of a kubelet
+      # health-check-timeout / NodeNotReady flapping incident).
+      allowSchedulingOnControlPlanes = true
       apiServer = {
         # Extra SANs so the API server's TLS cert is valid when reached via
         # these IPs (needed since cluster_endpoint / kubePrism etc. all
