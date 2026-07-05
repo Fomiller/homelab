@@ -76,6 +76,13 @@ persistence:
     storageClassName: longhorn
   snippets:
     storageClassName: longhorn
+  # Studio mounts a functions-storage volume off this flag (not
+  # deployment.functions.enabled) whenever it's true - and since the PVC
+  # itself is only created when deployment.functions.enabled is true (which
+  # we disabled above), leaving this at the chart's true default left Studio
+  # referencing a PVC that never gets created (stuck Pending).
+  functions:
+    enabled: false
 
 # Fronted by our own Traefik IngressRoute (ingressroute.yaml) -> Kong, so the
 # chart's own ingress stays off.
