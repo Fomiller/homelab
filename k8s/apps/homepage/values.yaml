@@ -121,6 +121,11 @@ config:
         total: true
         labels: true
         nodes: true
+    - openweathermap:
+        label: Home
+        units: imperial
+        cache: 5
+        apiKey: "{{HOMEPAGE_VAR_OPEN_WEATHER_API_KEY}}"
     - search:
         provider: google
         target: _blank
@@ -163,11 +168,6 @@ config:
             url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_WORK}}"
             name: Work
             color: yellow
-    - openweathermap:
-        label: Home
-        units: imperial
-        cache: 5
-        apiKey: "{{HOMEPAGE_VAR_OPEN_WEATHER_API_KEY}}"
 
   # href      -> public URL (behind Cloudflare Access at the edge)
   # siteMonitor -> in-cluster Service URL, so the status dot reflects real
