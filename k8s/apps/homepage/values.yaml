@@ -131,10 +131,10 @@ config:
           showLabel: true
     # Homepage pod's own container resource usage, for comparison against
     # the cluster-wide kubernetes widget above.
-    - resources:
-        label: Homepage Pod
-        cpu: true
-        memory: true
+    # - resources:
+    #     label: Homepage Pod
+    #     cpu: true
+    #     memory: true
     # Aggregate Longhorn storage utilization. This is an info widget (not a
     # per-service widget) — credentials/url come from settingsString's
     # providers.longhorn above.
