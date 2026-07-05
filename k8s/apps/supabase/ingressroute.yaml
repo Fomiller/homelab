@@ -1,0 +1,23 @@
+# supabase.fomiller.com is already covered by the *.fomiller.com wildcard DNS
+# record and the tunnel's wildcard ingress (both in infra/units/cloudflare),
+# which forward every subdomain to this Traefik instance. Exposing supabase is
+# therefore a k8s-only change: Traefik routes to it by Host header here.
+#
+# Everything (Studio dashboard, REST/Auth/Realtime/Storage/Functions APIs)
+# is fronted by the chart's own Kong gateway on port 8000 - Kong does the
+# internal routing (see the chart's files/kong/kong.yml), so a single route
+# to the kong Service covers the whole stack.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: supabase
+  namespace: supabase
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`supabase.fomiller.com`)
+      kind: Rule
+      services:
+        - name: supabase-supabase-kong
+          port: 8000

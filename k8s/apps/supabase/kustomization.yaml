@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: supabase
+
+resources:
+- namespace.yaml
+- external-secrets.yaml
+- ingressroute.yaml
+
+helmCharts:
+- name: supabase
+  repo: https://supabase-community.github.io/supabase-kubernetes
+  releaseName: supabase
+  includeCRDs: true
+  version: 0.6.1
+  namespace: supabase
+  valuesFile: values.yaml
+
+# `helm template` (which the helmCharts inflator above shells out to) renders
+# helm.sh/hook: test Jobs inline unless passed --no-hooks, and kustomize has
+# no knob for that - so the chart's 4 test-* Jobs (test-db/kong/meta/studio)
+# come through as plain Jobs that ArgoCD would otherwise apply and re-create
+# on every sync. They're only meant to run via `helm test`; drop them here.
+patches:
+- target:
+    kind: Job
+  patch: |-
+    $patch: delete
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: unused
