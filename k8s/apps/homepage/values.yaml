@@ -78,6 +78,9 @@ config:
       Infrastructure:
         style: row
         columns: 4
+      Tailscale:
+        style: row
+        columns: 3
       Observability:
         style: row
         columns: 3
@@ -85,6 +88,12 @@ config:
         style: row
         columns: 2
       Personal:
+        style: row
+        columns: 1
+      Github:
+        style: row
+        columns: 1
+      Services:
         style: row
         columns: 1
 
@@ -171,6 +180,8 @@ config:
             href: https://longhorn.fomiller.com
             description: Distributed block storage
             siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
+
+    - Tailscale:
         - Tailscale iPhone:
             icon: tailscale.png
             href: https://login.tailscale.com/admin/machines
