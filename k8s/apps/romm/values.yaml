@@ -45,6 +45,28 @@ env:
       name: romm-secrets
       key: ROMM_AUTH_SECRET_KEY
 
+  # "Chef's Choice" metadata provider stack (RomM docs' recommended combo):
+  # Hasheous + IGDB + SteamGridDB + RetroAchievements. Hasheous needs no
+  # key — just this flag; the other three need Doppler-backed API creds
+  # below (see external-secrets.yaml).
+  HASHEOUS_API_ENABLED: "true"
+  IGDB_CLIENT_ID:
+    secretKeyRef:
+      name: romm-secrets
+      key: igdb-client-id
+  IGDB_CLIENT_SECRET:
+    secretKeyRef:
+      name: romm-secrets
+      key: igdb-client-secret
+  STEAMGRIDDB_API_KEY:
+    secretKeyRef:
+      name: romm-secrets
+      key: steamgriddb-api-key
+  RETROACHIEVEMENTS_API_KEY:
+    secretKeyRef:
+      name: romm-secrets
+      key: retroachievements-api-key
+
 # Bundled bitnami mariadb/redis subcharts.
 # image.repository overridden to bitnamilegacy/* — bitnami pulled all
 # non-"latest" tags off docker.io/bitnami/* (Aug 2025 registry split) and

@@ -303,6 +303,9 @@ config:
         - Cloudflare Zero Trust:
             - abbr: CF
               href: https://one.dash.cloudflare.com
+        - TP-Link Router:
+            - abbr: TP
+              href: http://tplinkwifi.net/webpages/index.html#/
 
   # Explicitly empty — no Docker socket integration in-cluster.
   docker:
