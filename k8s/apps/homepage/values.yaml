@@ -77,7 +77,7 @@ config:
     layout:
       Infrastructure:
         style: row
-        columns: 5
+        columns: 4
       Observability:
         style: row
         columns: 3
@@ -159,7 +159,10 @@ config:
         - Traefik:
             icon: traefik.png
             description: Ingress controller / edge router
-            siteMonitor: http://traefik.traefik.svc.cluster.local:80
+            # Plain web entrypoint (:80) has no catch-all "/" route, so it
+            # 404s on a bare ping — reuse the internal API path instead,
+            # which is the one endpoint confirmed to return 200.
+            siteMonitor: http://traefik-internal-api.traefik.svc.cluster.local:8080/api/overview
             widget:
               type: traefik
               url: http://traefik-internal-api.traefik.svc.cluster.local:8080
@@ -225,7 +228,7 @@ config:
     # "Missing calendar" same as longhorn's original miscategorization.
     - Personal:
         - Calendar:
-            icon: googlecalendar.png
+            icon: si-googlecalendar
             widget:
               type: calendar
               firstDayInWeek: sunday
