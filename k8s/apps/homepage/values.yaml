@@ -96,7 +96,7 @@ config:
         columns: 1
       Data & Streaming:
         style: column
-        columns: 1
+        columns: 2
       Tailscale:
         style: row
         columns: 3
@@ -141,11 +141,11 @@ config:
     # Aggregate Longhorn storage utilization. This is an info widget (not a
     # per-service widget) — credentials/url come from settingsString's
     # providers.longhorn above.
-    - longhorn:
-        expanded: true
-        total: true
-        labels: true
-        nodes: true
+    # - longhorn:
+    #     expanded: true
+    #     total: true
+    #     labels: true
+    #     nodes: true
     - openweathermap:
         label: Home
         latitude: 36.1627
@@ -210,13 +210,6 @@ config:
             description: Log aggregation
             siteMonitor: http://loki-gateway.monitoring.svc.cluster.local:80
 
-    - Longhorn:
-        - Longhorn:
-            icon: longhorn.png
-            href: https://longhorn.fomiller.com
-            description: Distributed block storage
-            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
-
     - Data & Streaming:
         - Redpanda Console:
             # Redpanda isn't in the bundled dashboard-icons pack; served from
@@ -225,6 +218,11 @@ config:
             href: https://redpanda.fomiller.com
             description: Kafka-compatible streaming console
             siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
+        - Longhorn:
+            icon: longhorn.png
+            href: https://longhorn.fomiller.com
+            description: Distributed block storage
+            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
     - Tailscale:
         - Tailscale iPhone:
