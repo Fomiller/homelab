@@ -1,3 +1,9 @@
+# Kubernetes auto-injects a ROMM_PORT env var (service-links, since the
+# Service is named "romm") that collides with romm's own ROMM_PORT env var
+# used to template nginx's listen directive, breaking nginx startup
+# ("invalid host in tcp://<ip>:10680"). Disabling service-links avoids it.
+enableServiceLinks: false
+
 # Pinned to the chart's tested appVersion for reproducible syncs.
 image:
   repository: ghcr.io/rommapp/romm
