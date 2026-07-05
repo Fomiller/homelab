@@ -84,6 +84,9 @@ config:
       Data & Streaming:
         style: row
         columns: 2
+      Personal:
+        style: row
+        columns: 1
 
     # Credentials/URL for the top-level longhorn info widget below.
     providers:
@@ -135,39 +138,6 @@ config:
           dateStyle: long
           timeStyle: short
           hourCycle: h23
-    - calendar:
-        firstDayInWeek: sunday
-        view: monthly
-        maxEvents: 10
-        integrations:
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PERSONAL}}"
-            name: Personal
-            color: blue
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_FAMILY}}"
-            name: Family
-            color: green
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MEDICAL}}"
-            name: Medical
-            color: red
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MUSIC_SHOWS}}"
-            name: Music & Shows
-            color: purple
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PEOPLE}}"
-            name: People
-            color: pink
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_TRAVEL}}"
-            name: Travel
-            color: orange
-          - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_WORK}}"
-            name: Work
-            color: yellow
 
   # href      -> public URL (behind Cloudflare Access at the edge)
   # siteMonitor -> in-cluster Service URL, so the status dot reflects real
@@ -249,6 +219,47 @@ config:
             href: https://redpanda.fomiller.com
             description: Kafka-compatible streaming console
             siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
+
+    # "calendar" is a per-service widget (src/widgets/components.js), not a
+    # top-level info widget — putting it under config.widgets gives
+    # "Missing calendar" same as longhorn's original miscategorization.
+    - Personal:
+        - Calendar:
+            icon: googlecalendar.png
+            widget:
+              type: calendar
+              firstDayInWeek: sunday
+              view: monthly
+              maxEvents: 10
+              integrations:
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PERSONAL}}"
+                  name: Personal
+                  color: blue
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_FAMILY}}"
+                  name: Family
+                  color: green
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MEDICAL}}"
+                  name: Medical
+                  color: red
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MUSIC_SHOWS}}"
+                  name: Music & Shows
+                  color: purple
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PEOPLE}}"
+                  name: People
+                  color: pink
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_TRAVEL}}"
+                  name: Travel
+                  color: orange
+                - type: ical
+                  url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_WORK}}"
+                  name: Work
+                  color: yellow
 
   bookmarks:
     - Github:
