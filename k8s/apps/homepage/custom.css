@@ -1,0 +1,27 @@
+/* The top info-widget row splits into a left-aligned group (kubernetes,
+   resources, longhorn, etc) and a right-aligned group (weather, search,
+   datetime), hardcoded in src/pages/index.jsx's rightAlignedWidgets list.
+   #information-widgets-right grows to fill remaining space and right-aligns
+   its own content, which leaves a visible gap whenever the left group
+   doesn't fill the row. Pack everything left instead. */
+#widgets-wrap {
+  justify-content: flex-start !important;
+}
+#information-widgets-right {
+  flex-grow: 0 !important;
+  margin: 0 !important;
+  justify-content: flex-start !important;
+}
+
+/* kubernetes (1st) and resources (2nd) are the first two children of
+   #widgets-wrap in widgets.yaml order — force each onto its own full-width
+   row instead of sharing a row with whatever fits next to them. */
+#widgets-wrap > *:nth-child(1),
+#widgets-wrap > *:nth-child(2) {
+  flex-basis: 100% !important;
+  width: 100% !important;
+}
+#widgets-wrap > *:nth-child(1) .flex-row,
+#widgets-wrap > *:nth-child(2) .flex-row {
+  width: 100%;
+}

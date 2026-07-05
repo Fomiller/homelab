@@ -65,6 +65,15 @@ persistence:
     type: configMap
     name: homepage-custom-icons
     mountPath: /app/public/icons
+  # subPath so this only overlays custom.css and leaves the rest of
+  # /app/config (widgets.yaml, services.yaml, etc, generated elsewhere)
+  # untouched.
+  custom-css:
+    enabled: true
+    type: configMap
+    name: homepage-custom-css
+    mountPath: /app/config/custom.css
+    subPath: custom.css
 
 config:
   # Go/Helm's toYaml sorts map keys, which would reorder the layout groups —
@@ -79,15 +88,15 @@ config:
       Infrastructure:
         style: row
         columns: 4
-      Tailscale:
-        style: row
-        columns: 3
       Observability:
         style: row
         columns: 3
       Data & Streaming:
         style: row
-        columns: 2
+        columns: 4
+      Tailscale:
+        style: row
+        columns: 3
       Personal:
         style: row
         columns: 1
@@ -144,6 +153,7 @@ config:
     - search:
         provider: google
         target: _blank
+        showSearchSuggestions: true
     - datetime:
         text_size: xl
         format:
@@ -168,6 +178,11 @@ config:
             href: https://authentik.fomiller.com
             description: Identity provider / SSO
             siteMonitor: http://authentik-server.authentik.svc.cluster.local
+        - Longhorn:
+            icon: longhorn.png
+            href: https://longhorn.fomiller.com
+            description: Distributed block storage
+            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
         - Traefik:
             icon: traefik.png
             description: Ingress controller / edge router
@@ -178,37 +193,6 @@ config:
             widget:
               type: traefik
               url: http://traefik-internal-api.traefik.svc.cluster.local:8080
-        - Longhorn:
-            icon: longhorn.png
-            href: https://longhorn.fomiller.com
-            description: Distributed block storage
-            siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
-
-    - Tailscale:
-        - Tailscale iPhone:
-            icon: tailscale.png
-            href: https://login.tailscale.com/admin/machines
-            description: Mesh VPN
-            widget:
-              type: tailscale
-              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_IPHONE}}"
-              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
-        - Tailscale Nimbus:
-            icon: tailscale.png
-            href: https://login.tailscale.com/admin/machines
-            description: Mesh VPN
-            widget:
-              type: tailscale
-              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_NIMBUS}}"
-              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
-        - Tailscale Subnet Router:
-            icon: tailscale.png
-            href: https://login.tailscale.com/admin/machines
-            description: Mesh VPN
-            widget:
-              type: tailscale
-              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_SUBNET_ROUTER}}"
-              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
 
     - Observability:
         - Grafana:
@@ -236,6 +220,32 @@ config:
             href: https://redpanda.fomiller.com
             description: Kafka-compatible streaming console
             siteMonitor: http://redpanda-console.redpanda.svc.cluster.local:8080
+
+    - Tailscale:
+        - Tailscale iPhone:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
+            widget:
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_IPHONE}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
+        - Tailscale Nimbus:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
+            widget:
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_NIMBUS}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
+        - Tailscale Subnet Router:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
+            widget:
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_SUBNET_ROUTER}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
 
     # "calendar" is a per-service widget (src/widgets/components.js), not a
     # top-level info widget — putting it under config.widgets gives

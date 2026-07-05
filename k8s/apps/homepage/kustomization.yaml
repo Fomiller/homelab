@@ -17,6 +17,11 @@ configMapGenerator:
   - icons/redpanda.png
   options:
     disableNameSuffixHash: true
+- name: homepage-custom-css
+  files:
+  - custom.css
+  options:
+    disableNameSuffixHash: true
 
 helmCharts:
 - name: homepage
