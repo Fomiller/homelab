@@ -136,9 +136,38 @@ config:
         maxEvents: 10
         integrations:
           - type: ical
-            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL}}"
-            name: Gmail Calendar
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PERSONAL}}"
+            name: Personal
             color: blue
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_FAMILY}}"
+            name: Family
+            color: green
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MEDICAL}}"
+            name: Medical
+            color: red
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_MUSIC_SHOWS}}"
+            name: Music & Shows
+            color: purple
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_PEOPLE}}"
+            name: People
+            color: pink
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_TRAVEL}}"
+            name: Travel
+            color: orange
+          - type: ical
+            url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_WORK}}"
+            name: Work
+            color: yellow
+    - openweathermap:
+        label: Home
+        units: imperial
+        cache: 5
+        apiKey: "{{HOMEPAGE_VAR_OPEN_WEATHER_API_KEY}}"
 
   # href      -> public URL (behind Cloudflare Access at the edge)
   # siteMonitor -> in-cluster Service URL, so the status dot reflects real
@@ -169,14 +198,30 @@ config:
             href: https://longhorn.fomiller.com
             description: Distributed block storage
             siteMonitor: http://longhorn-frontend.longhorn-system.svc.cluster.local
-        - Tailscale:
+        - Tailscale iPhone:
             icon: tailscale.png
             href: https://login.tailscale.com/admin/machines
             description: Mesh VPN
             widget:
               type: tailscale
-              deviceid: "{{HOMEPAGE_VAR_TAILSCALE_DEVICEID}}"
-              key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_IPHONE}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
+        - Tailscale Nimbus:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
+            widget:
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_NIMBUS}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
+        - Tailscale Subnet Router:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: Mesh VPN
+            widget:
+              type: tailscale
+              deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_SUBNET_ROUTER}}"
+              key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
 
     - Observability:
         - Grafana:
