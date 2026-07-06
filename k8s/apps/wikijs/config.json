@@ -1,0 +1,11 @@
+{
+  "appName": "wikijs",
+  "userGivenName": "wikijs",
+  "destNamespace": "wikijs",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/wikijs",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}

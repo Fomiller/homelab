@@ -1,0 +1,18 @@
+# wiki.fomiller.com is already covered by the *.fomiller.com wildcard DNS
+# record and the tunnel's wildcard ingress (both in infra/units/cloudflare),
+# which forward every subdomain to this Traefik instance. Exposing wikijs is
+# therefore a k8s-only change: Traefik routes to it by Host header here.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wikijs
+  namespace: wikijs
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`wiki.fomiller.com`)
+      kind: Rule
+      services:
+        - name: wikijs
+          port: 80

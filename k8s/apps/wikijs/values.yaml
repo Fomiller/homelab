@@ -1,0 +1,23 @@
+# Release name "wikijs" contains the chart name "wiki", so the chart's
+# fullname template collapses to just "wikijs" (see _helpers.tpl
+# wiki.fullname) — that's the Service name our ingressroute.yaml targets.
+
+# Fronted by our own Traefik IngressRoute (ingressroute.yaml), so the
+# chart's own ingress stays off.
+ingress:
+  enabled: false
+
+# Bundled postgres:18 subchart (own StatefulSet, not bitnami) is enough for
+# a single-node wiki — all content/config lives in the DB, no separate PVC
+# needed for the app pod itself.
+postgresql:
+  enabled: true
+  # Existing secret must carry both postgresql-username and
+  # postgresql-password keys (see external-secrets.yaml / infra/units/aws
+  # /global/secrets/wikijs.tf) — those are the chart's own default key
+  # names once existingSecret is set.
+  existingSecret: wikijs-secrets
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 8Gi
