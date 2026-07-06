@@ -7,12 +7,3 @@ resources:
 - redpanda-cluster.yaml
 
 namespace: redpanda
-
-helmCharts:
-- name: operator
-  repo: https://charts.redpanda.com
-  releaseName: redpanda-operator
-  includeCRDs: true
-  version: 26.1.8
-  namespace: redpanda
-  valuesFile: operator-values.yaml

@@ -1,0 +1,11 @@
+{
+  "appName": "redpanda-operator",
+  "userGivenName": "redpanda-operator",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/redpanda-operator",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
