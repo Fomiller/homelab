@@ -109,6 +109,9 @@ config:
       Services:
         style: row
         columns: 1
+      Docs:
+        style: row
+        columns: 1
 
     # Credentials/URL for the top-level longhorn info widget below.
     providers:
@@ -291,7 +294,7 @@ config:
                   name: Work
                   color: yellow
 
-    - Services:
+    - Docs:
         - Wiki.js:
             icon: wikijs.png
             href: https://wiki.fomiller.com
