@@ -12,7 +12,13 @@ spec:
 
     image:
       repository: docker.redpanda.com/redpandadata/redpanda
-      tag: ""
+      # Pinned to the version actually running before this migration (old
+      # chart's appVersion). Leaving this blank defaults to the operator
+      # chart's appVersion (v26.1.x) - a silent major-version upgrade that
+      # crash-loops on startup: the on-disk cluster config already has
+      # core_balancing_continuous/partition_auto_balancing_continuous
+      # enabled, and v26 gates those behind an Enterprise license.
+      tag: v25.3.6
 
     podTemplate:
       labels: {}
