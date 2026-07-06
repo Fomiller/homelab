@@ -13,6 +13,12 @@ metadata:
   finalizers:
     - operator.redpanda.com/finalizer
 spec:
+  # clusterSpec.podTemplate (top-level) and
+  # clusterSpec.statefulset.sideCars.{pvcUnbinder,brokerDecommissioner} are
+  # valid in the bare redpanda chart's values.yaml but NOT part of the
+  # Redpanda CRD's schema - the API server silently pruned them on every
+  # write, so git and live could never match and ArgoCD stayed permanently
+  # OutOfSync. Removed rather than kept as dead config.
   clusterSpec:
     nameOverride: ""
     fullnameOverride: ""
@@ -28,16 +34,6 @@ spec:
       # core_balancing_continuous/partition_auto_balancing_continuous
       # enabled, and v26 gates those behind an Enterprise license.
       tag: v25.3.6
-
-    podTemplate:
-      labels: {}
-      annotations: {}
-      spec:
-        imagePullSecrets: []
-        securityContext:
-          fsGroup: 101
-          runAsUser: 101
-          fsGroupChangePolicy: OnRootMismatch
 
     auditLogging:
       enabled: false
@@ -209,13 +205,6 @@ spec:
           tag: v25.3.1
           repository: docker.redpanda.com/redpandadata/redpanda-operator
         args: []
-        pvcUnbinder:
-          enabled: false
-          unbindAfter: 60s
-        brokerDecommissioner:
-          enabled: false
-          decommissionAfter: 60s
-          decommissionRequeueTimeout: 10s
         configWatcher:
           enabled: true
         controllers:
