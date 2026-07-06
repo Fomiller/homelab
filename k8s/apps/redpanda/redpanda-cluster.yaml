@@ -55,11 +55,14 @@ spec:
       deployment:
         create: false
       config:
-        # Newer console defaults to impersonateUser: true, which it refuses
-        # to start with unless Kafka SASL auth is actually enabled - ours
-        # isn't (auth.sasl.enabled: false above), so turn it back off.
+        # The operator's console integration force-generates a Kafka client
+        # config assuming SASL is on, regardless of auth.sasl.enabled above.
+        # Our broker has SASL off, so console must match or it fails the
+        # handshake (ILLEGAL_SASL_STATE) - and impersonateUser requires SASL
+        # auth to be enabled, so it has to come down with it.
         kafka:
           sasl:
+            enabled: false
             impersonateUser: false
       # The operator creates the console Service dynamically at reconcile
       # time (it's not part of the static kustomize render), so the old
