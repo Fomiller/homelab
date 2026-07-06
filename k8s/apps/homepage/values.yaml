@@ -291,6 +291,13 @@ config:
                   name: Work
                   color: yellow
 
+    - Services:
+        - Wiki.js:
+            icon: wikijs.png
+            href: https://wiki.fomiller.com
+            description: Documentation wiki
+            siteMonitor: http://wikijs.wikijs.svc.cluster.local
+
   bookmarks:
     - Github:
         - Homelab:
