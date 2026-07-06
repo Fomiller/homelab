@@ -32,6 +32,42 @@ deployment:
   imgproxy:
     enabled: false
 
+  # Sized off observed usage (kubectl top): db ~2m/61Mi, kong ~4m/245Mi,
+  # meta ~6m/89Mi, studio ~1m/194Mi. Limits give ~3-4x headroom for query
+  # spikes; requests set a real QoS class instead of BestEffort.
+  db:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  kong:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 250m
+        memory: 512Mi
+  meta:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  studio:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 250m
+        memory: 512Mi
+
 secret:
   # Real credentials, sourced from Doppler via external-secrets.yaml. Every
   # key referenced here (including the non-sensitive ones like the database
