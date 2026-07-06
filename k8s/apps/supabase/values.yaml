@@ -67,6 +67,12 @@ deployment:
       limits:
         cpu: 250m
         memory: 512Mi
+    # persistence.snippets is a ReadWriteOnce PVC; the chart's default
+    # RollingUpdate schedules the new pod before the old one releases the
+    # volume, causing a permanent Multi-Attach error (single-replica, so no
+    # availability cost to Recreate).
+    strategy:
+      type: Recreate
 
 secret:
   # Real credentials, sourced from Doppler via external-secrets.yaml. Every
