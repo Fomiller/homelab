@@ -54,7 +54,13 @@ spec:
         create: false
       deployment:
         create: false
-      config: {}
+      config:
+        # Newer console defaults to impersonateUser: true, which it refuses
+        # to start with unless Kafka SASL auth is actually enabled - ours
+        # isn't (auth.sasl.enabled: false above), so turn it back off.
+        kafka:
+          sasl:
+            impersonateUser: false
       # The operator creates the console Service dynamically at reconcile
       # time (it's not part of the static kustomize render), so the old
       # tailscale.patch.yaml kustomize patch has nothing to target anymore -
