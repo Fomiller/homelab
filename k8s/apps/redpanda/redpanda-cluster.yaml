@@ -127,7 +127,7 @@ spec:
           cloud_storage_enabled: false
           cloud_storage_enable_remote_write: true
           cloud_storage_enable_remote_read: true
-          cloud_storage_cache_size: 5368709120
+          cloud_storage_cache_size: "5368709120"
 
     post_install_job:
       enabled: true
