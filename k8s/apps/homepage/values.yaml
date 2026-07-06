@@ -100,6 +100,9 @@ config:
       Tailscale:
         style: row
         columns: 3
+      Docs:
+        style: row
+        columns: 1
       Personal:
         style: row
         columns: 1
@@ -107,9 +110,6 @@ config:
         style: row
         columns: 1
       Services:
-        style: row
-        columns: 1
-      Docs:
         style: row
         columns: 1
 
@@ -253,6 +253,13 @@ config:
               deviceid: "{{HOMEPAGE_VAR_TS_DEVICE_ID_SUBNET_ROUTER}}"
               key: "{{HOMEPAGE_VAR_TS_API_KEY_HOMEPAGE}}"
 
+    - Docs:
+        - Wiki.js:
+            icon: wikijs.png
+            href: https://wiki.fomiller.com
+            description: Documentation wiki
+            siteMonitor: http://wikijs.wikijs.svc.cluster.local
+
     # "calendar" is a per-service widget (src/widgets/components.js), not a
     # top-level info widget — putting it under config.widgets gives
     # "Missing calendar" same as longhorn's original miscategorization.
@@ -293,13 +300,6 @@ config:
                   url: "{{HOMEPAGE_VAR_GCAL_ICS_URL_WORK}}"
                   name: Work
                   color: yellow
-
-    - Docs:
-        - Wiki.js:
-            icon: wikijs.png
-            href: https://wiki.fomiller.com
-            description: Documentation wiki
-            siteMonitor: http://wikijs.wikijs.svc.cluster.local
 
   bookmarks:
     - Github:
