@@ -1,0 +1,309 @@
+apiVersion: cluster.redpanda.com/v1alpha2
+kind: Redpanda
+metadata:
+  name: redpanda
+  namespace: redpanda
+spec:
+  clusterSpec:
+    nameOverride: ""
+    fullnameOverride: ""
+    clusterDomain: cluster.local.
+    commonLabels: {}
+
+    image:
+      repository: docker.redpanda.com/redpandadata/redpanda
+      tag: ""
+
+    podTemplate:
+      labels: {}
+      annotations: {}
+      spec:
+        imagePullSecrets: []
+        securityContext:
+          fsGroup: 101
+          runAsUser: 101
+          fsGroupChangePolicy: OnRootMismatch
+
+    auditLogging:
+      enabled: false
+      listener: internal
+      partitions: 12
+      clientMaxBufferSize: 16777216
+      queueDrainIntervalMs: 500
+      queueMaxBufferSizePerShard: 1048576
+
+    enterprise:
+      license: ""
+      licenseSecretRef: ~
+
+    rackAwareness:
+      enabled: false
+      nodeAnnotation: topology.kubernetes.io/zone
+
+    console:
+      enabled: true
+      configmap:
+        create: false
+      secret:
+        create: false
+      deployment:
+        create: false
+      config: {}
+      # The operator creates the console Service dynamically at reconcile
+      # time (it's not part of the static kustomize render), so the old
+      # tailscale.patch.yaml kustomize patch has nothing to target anymore -
+      # set the Tailscale exposure annotations straight through the console
+      # subchart's own service.annotations field instead.
+      service:
+        annotations:
+          tailscale.com/expose: "true"
+          tailscale.com/hostname: "redpanda-console"
+
+    auth:
+      sasl:
+        enabled: false
+        mechanism: SCRAM-SHA-512
+        secretRef: "redpanda-users"
+        users: []
+        bootstrapUser:
+          mechanism: SCRAM-SHA-256
+
+    tls:
+      enabled: true
+      certs:
+        default:
+          caEnabled: true
+        external:
+          caEnabled: true
+
+    external:
+      service:
+        enabled: true
+      enabled: true
+      type: NodePort
+      addresses:
+      - redpanda-0
+      - redpanda-1
+
+    logging:
+      logLevel: info
+      usageStats:
+        enabled: true
+
+    monitoring:
+      enabled: false
+      scrapeInterval: 30s
+      labels: {}
+
+    resources:
+      cpu:
+        cores: 1
+      memory:
+        container:
+          max: 1.5Gi
+
+    storage:
+      hostPath: ""
+      persistentVolume:
+        enabled: true
+        size: 1Gi
+        storageClass: ""
+        labels: {}
+        annotations: {}
+        nameOverwrite: ""
+      tiered:
+        mountType: none
+        hostPath: ""
+        persistentVolume:
+          storageClass: ""
+          labels: {}
+          annotations: {}
+        credentialsSecretRef:
+          accessKey:
+            configurationKey: cloud_storage_access_key
+          secretKey:
+            configurationKey: cloud_storage_secret_key
+        config:
+          cloud_storage_enabled: false
+          cloud_storage_enable_remote_write: true
+          cloud_storage_enable_remote_read: true
+          cloud_storage_cache_size: 5368709120
+
+    post_install_job:
+      enabled: true
+      podTemplate:
+        labels: {}
+        annotations: {}
+        spec:
+          securityContext: {}
+          containers:
+          - name: post-install
+            securityContext: {}
+            env: []
+
+    statefulset:
+      replicas: 2
+      updateStrategy:
+        type: RollingUpdate
+      budget:
+        maxUnavailable: 1
+      additionalSelectorLabels: {}
+      podTemplate:
+        labels: {}
+        annotations: {}
+        spec:
+          securityContext: {}
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    "app.kubernetes.io/component": '{{ include "redpanda.name" . }}-statefulset'
+                    "app.kubernetes.io/instance": '{{ .Release.Name }}'
+                    "app.kubernetes.io/name": '{{ include "redpanda.name" . }}'
+          terminationGracePeriodSeconds: 90
+          nodeSelector: {}
+          priorityClassName: ""
+          tolerations: []
+          topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                "app.kubernetes.io/component": '{{ include "redpanda.name" . }}-statefulset'
+                "app.kubernetes.io/instance": '{{ .Release.Name }}'
+                "app.kubernetes.io/name": '{{ include "redpanda.name" . }}'
+      podAntiAffinity:
+        topologyKey: kubernetes.io/hostname
+        type: hard
+        weight: 100
+        custom: {}
+      sideCars:
+        image:
+          tag: v25.3.1
+          repository: docker.redpanda.com/redpandadata/redpanda-operator
+        args: []
+        pvcUnbinder:
+          enabled: false
+          unbindAfter: 60s
+        brokerDecommissioner:
+          enabled: false
+          decommissionAfter: 60s
+          decommissionRequeueTimeout: 10s
+        configWatcher:
+          enabled: true
+        controllers:
+          enabled: false
+          createRBAC: true
+          healthProbeAddress: ":8085"
+          metricsAddress: ":9082"
+          pprofAddress: ":9083"
+          run:
+            - all
+      initContainers:
+        fsValidator:
+          enabled: false
+          expectedFS: xfs
+        setDataDirOwnership:
+          enabled: false
+        configurator:
+          additionalCLIArgs: []
+      initContainerImage:
+        repository: busybox
+        tag: latest
+      additionalRedpandaCmdFlags: []
+
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+
+    rbac:
+      enabled: true
+      rpkDebugBundle: true
+      annotations: {}
+
+    tuning:
+      tune_aio_events: false
+
+    listeners:
+      admin:
+        port: 9644
+        external:
+          default:
+            port: 9645
+            tls:
+              cert: external
+            advertisedPorts:
+            - 31644
+        tls:
+          cert: default
+          requireClientAuth: false
+      kafka:
+        port: 9093
+        authenticationMethod:
+        tls:
+          cert: default
+          requireClientAuth: false
+        external:
+          default:
+            port: 9094
+            advertisedPorts:
+            - 31092
+            tls:
+              cert: external
+            authenticationMethod:
+      rpc:
+        port: 33145
+        tls:
+          cert: default
+          requireClientAuth: false
+      schemaRegistry:
+        enabled: true
+        port: 8081
+        authenticationMethod:
+        tls:
+          cert: default
+          requireClientAuth: false
+        external:
+          default:
+            port: 8084
+            advertisedPorts:
+            - 30081
+            tls:
+              cert: external
+              requireClientAuth: false
+            authenticationMethod:
+      http:
+        enabled: true
+        port: 8082
+        authenticationMethod:
+        tls:
+          cert: default
+          requireClientAuth: false
+        external:
+          default:
+            port: 8083
+            advertisedPorts:
+              - 30082
+            tls:
+              cert: external
+              requireClientAuth: false
+            authenticationMethod:
+
+    config:
+      rpk: {}
+      cluster: {}
+      extraClusterConfiguration: {}
+      tunable:
+        log_segment_size_min: 16777216
+        log_segment_size_max: 268435456
+        compacted_log_segment_size: 67108864
+        max_compacted_log_segment_size: 536870912
+        kafka_connection_rate_limit: 1000
+      node:
+        crash_loop_limit: 5
+      schema_registry_client: {}
+      pandaproxy_client: {}

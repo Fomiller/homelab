@@ -4,20 +4,15 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - ingressroute.yaml
+- redpanda-cluster.yaml
 
 namespace: redpanda
 
 helmCharts:
-- name: redpanda
+- name: operator
   repo: https://charts.redpanda.com
-  releaseName: redpanda
+  releaseName: redpanda-operator
   includeCRDs: true
-  version: 25.3.2
+  version: 26.1.8
   namespace: redpanda
-  valuesFile: values.yaml
-    
-patches:
-  - path: tailscale.patch.yaml
-    target:
-      kind: Service
-      name: redpanda-console
+  valuesFile: operator-values.yaml

@@ -1,0 +1,8 @@
+# Values for the Redpanda Operator chart (controller-manager that reconciles
+# the Redpanda CRD below), installed into the same "redpanda" namespace as
+# the cluster it manages.
+crds:
+  # Chart installs the Redpanda CRD via a pre-install/pre-upgrade Job that
+  # calls `redpanda-operator crd` against the API server (no static crds/
+  # folder in this chart) - this flag is what makes that Job actually run.
+  enabled: true
