@@ -82,12 +82,17 @@ locals {
   # Controlplane-only patch, merged on top of the common patch above.
   controlplane_patch = yamlencode(merge(local.common_machine_patch, {
     machine = merge(local.common_machine_patch.machine, {
-      # Marks controlplane nodes so cloud/external LB integrations skip them
-      # when picking backend targets — standard k8s well-known label, not
-      # Talos-specific, just applied here via machine config instead of
-      # `kubectl label`.
       nodeLabels = {
+        # Marks controlplane nodes so cloud/external LB integrations skip them
+        # when picking backend targets — standard k8s well-known label, not
+        # Talos-specific, just applied here via machine config instead of
+        # `kubectl label`.
         "node.kubernetes.io/exclude-from-external-load-balancers" = ""
+        # Controlplane nodes are schedulable (allowSchedulingOnControlPlanes
+        # below), so label them "worker" too — ROLES then shows
+        # "control-plane,worker" instead of just "control-plane", reflecting
+        # that they actually run workload pods.
+        "node-role.kubernetes.io/worker" = ""
       }
       # Same iSCSI/nbd kernel modules as workers — controlplane nodes are now
       # schedulable (see cluster.allowSchedulingOnControlPlanes below) and run
@@ -157,6 +162,12 @@ locals {
           { name = "iscsi_generic" },
           { name = "configfs" },
         ]
+      }
+      # Talos/kubelet doesn't self-apply the standard "worker" role label
+      # (that's historically a kubeadm behavior), so ROLES shows <none>
+      # without this.
+      nodeLabels = {
+        "node-role.kubernetes.io/worker" = ""
       }
     })
     cluster = merge(local.common_machine_patch.cluster, {
