@@ -163,12 +163,6 @@ locals {
           { name = "configfs" },
         ]
       }
-      # Talos/kubelet doesn't self-apply the standard "worker" role label
-      # (that's historically a kubeadm behavior), so ROLES shows <none>
-      # without this.
-      nodeLabels = {
-        "node-role.kubernetes.io/worker" = ""
-      }
     })
     cluster = merge(local.common_machine_patch.cluster, {
       # Workers don't run the API server, but this apiServer.extraArgs block
