@@ -10,6 +10,8 @@ metadata:
     cluster.redpanda.com/managed: "true"
     operator.redpanda.com/config-sync-mode: additive
     operator.redpanda.com/restart-cluster-on-config-change: "false"
+  finalizers:
+    - operator.redpanda.com/finalizer
 spec:
   clusterSpec:
     nameOverride: ""
