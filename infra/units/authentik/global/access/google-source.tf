@@ -38,6 +38,16 @@ resource "authentik_source_oauth" "google" {
   authentication_flow = data.authentik_flow.source_authentication.id
   enrollment_flow     = data.authentik_flow.source_enrollment.id
   user_matching_mode  = "email_link"
+
+  # authentik derives these from provider_type = "google" server-side and
+  # always returns them, but the provider schema marks them optional (not
+  # computed) — leaving them unset here causes a perpetual no-op diff
+  # (apply nulls them, next refresh re-populates them from the API). Pinning
+  # them to the values authentik itself returns stops the loop.
+  access_token_url  = "https://oauth2.googleapis.com/token"
+  authorization_url = "https://accounts.google.com/o/oauth2/v2/auth"
+  oidc_jwks_url     = "https://www.googleapis.com/oauth2/v3/certs"
+  profile_url       = "https://openidconnect.googleapis.com/v1/userinfo"
 }
 
 # The login page only shows source buttons listed on the identification

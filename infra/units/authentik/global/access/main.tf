@@ -58,10 +58,15 @@ resource "authentik_provider_oauth2" "cloudflare_access" {
   # for provider". Cloudflare Access uses the standard code flow.
   grant_types = ["authorization_code", "refresh_token"]
 
+  # redirect_uri_type is optional-but-not-computed in the provider schema;
+  # authentik always returns "authorization" for a plain redirect URI, so
+  # this must be pinned explicitly or every plan shows a phantom diff
+  # nulling it out and reading it back.
   allowed_redirect_uris = [
     {
-      matching_mode = "strict"
-      url           = "https://${var.cloudflare_team_name}.cloudflareaccess.com/cdn-cgi/access/callback"
+      matching_mode     = "strict"
+      url               = "https://${var.cloudflare_team_name}.cloudflareaccess.com/cdn-cgi/access/callback"
+      redirect_uri_type = "authorization"
     }
   ]
 }
