@@ -87,9 +87,9 @@ remote_state {
     disable_bucket_update = true
     bucket                = local.bucket
     # <repo>/<env>/<provider>/<scope>/<unit>/terraform.tfstate
-    key            = "${local.service_vars.locals.repo_name}/${path_relative_to_include()}/terraform.tfstate"
-    region         = local.region
-    dynamodb_table = "fomiller-terraform-state-lock"
+    key          = "${local.service_vars.locals.repo_name}/${path_relative_to_include()}/terraform.tfstate"
+    region       = local.region
+    use_lockfile = true
   }
   generate = {
     path      = "_.backend.gen.tf"
