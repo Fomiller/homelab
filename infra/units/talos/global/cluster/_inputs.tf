@@ -29,7 +29,7 @@ variable "controlplane_nodes" {
 
 variable "worker_nodes" {
   type    = list(string)
-  default = ["192.168.0.212", "192.168.0.197"]
+  default = ["192.168.0.212", "192.168.0.197", "192.168.0.181", "192.168.0.179", "192.168.0.213"]
 }
 
 # Disk Talos installs itself onto on each node — must match the actual disk
