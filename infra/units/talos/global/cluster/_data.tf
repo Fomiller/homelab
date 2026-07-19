@@ -54,8 +54,8 @@ data "talos_machine_configuration" "worker" {
 data "talos_client_configuration" "this" {
   cluster_name         = var.cluster_name
   client_configuration = talos_machine_secrets.this.client_configuration
-  endpoints            = var.controlplane_nodes
-  nodes                = concat(var.controlplane_nodes, var.worker_nodes)
+  endpoints            = local.controlplane_nodes
+  nodes                = concat(local.controlplane_nodes, local.worker_nodes)
 }
 
 # Fetches the kubeconfig for the cluster straight from a controlplane node's
@@ -64,7 +64,7 @@ data "talos_client_configuration" "this" {
 # has actually been bootstrapped.
 data "talos_cluster_kubeconfig" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
-  node                 = var.controlplane_nodes[0]
+  node                 = local.controlplane_nodes[0]
 
   depends_on = [talos_machine_bootstrap.this]
 }

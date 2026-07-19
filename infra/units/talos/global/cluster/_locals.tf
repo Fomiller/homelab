@@ -1,4 +1,7 @@
 locals {
+  controlplane_nodes = ["192.168.0.140", "192.168.0.192", "192.168.0.196"]
+  worker_nodes       = ["192.168.0.212", "192.168.0.197", "192.168.0.181", "192.168.0.179", "192.168.0.213"]
+
   # Machine config patch shared by controlplane and worker nodes. Talos
   # machine config is normally generated whole (`talosctl gen config`) then
   # "patched" — merging this map with the generated defaults is the

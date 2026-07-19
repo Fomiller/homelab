@@ -22,16 +22,6 @@ variable "kubernetes_version" {
   default = "v1.34.1"
 }
 
-variable "controlplane_nodes" {
-  type    = list(string)
-  default = ["192.168.0.140", "192.168.0.192", "192.168.0.196"]
-}
-
-variable "worker_nodes" {
-  type    = list(string)
-  default = ["192.168.0.212", "192.168.0.197", "192.168.0.181", "192.168.0.179", "192.168.0.213"]
-}
-
 # Disk Talos installs itself onto on each node — must match the actual disk
 # device name on the bare-metal boxes (e.g. `lsblk`/`talosctl disks`), not a
 # cloud volume ID.

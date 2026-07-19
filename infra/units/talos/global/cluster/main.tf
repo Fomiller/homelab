@@ -37,7 +37,7 @@ resource "talos_machine_secrets" "this" {
 # or requires a reboot; other options are "no-reboot" (fail instead of
 # rebooting) and "reboot" (always reboot).
 resource "talos_machine_configuration_apply" "controlplane" {
-  for_each = toset(var.controlplane_nodes)
+  for_each = toset(local.controlplane_nodes)
 
   client_configuration        = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.controlplane.machine_configuration
@@ -47,7 +47,7 @@ resource "talos_machine_configuration_apply" "controlplane" {
 
 # Same as above, for worker nodes.
 resource "talos_machine_configuration_apply" "worker" {
-  for_each = toset(var.worker_nodes)
+  for_each = toset(local.worker_nodes)
 
   client_configuration        = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
@@ -62,7 +62,7 @@ resource "talos_machine_configuration_apply" "worker" {
 # in place permanently rather than something you run-once-then-delete.
 resource "talos_machine_bootstrap" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
-  node                 = var.controlplane_nodes[0]
+  node                 = local.controlplane_nodes[0]
 
   depends_on = [talos_machine_configuration_apply.controlplane]
 }
