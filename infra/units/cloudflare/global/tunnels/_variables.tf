@@ -55,6 +55,7 @@ variable "protected_hostnames" {
     "grafana.fomiller.com",
     "longhorn.fomiller.com",
     "redpanda.fomiller.com",
+    "temporal.fomiller.com",
   ]
 }
 

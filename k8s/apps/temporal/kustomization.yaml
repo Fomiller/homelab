@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+- postgres-secret.yaml
+- postgres.yaml
+- ingressroute.yaml
+
+namespace: temporal
+
+helmCharts:
+- name: temporal
+  repo: https://go.temporal.io/helm-charts
+  releaseName: temporal
+  includeCRDs: true
+  version: 1.6.0
+  namespace: temporal
+  valuesFile: values.yaml
+
+# `helm template` (what the helmCharts inflator above shells out to) renders
+# helm.sh/hook: test Pods inline unless passed --no-hooks, same issue noted
+# in k8s/apps/supabase/kustomization.yaml. This chart's only test hook is
+# temporal-test-cluster-health, meant to run solely via `helm test` - drop
+# it so ArgoCD doesn't apply and track a stray one-shot Pod.
+patches:
+- target:
+    kind: Pod
+    name: temporal-test-cluster-health
+  patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: temporal-test-cluster-health
