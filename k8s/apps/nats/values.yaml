@@ -1,0 +1,11 @@
+# Core NATS only - request/reply doesn't need JetStream or clustering, and
+# chart defaults already give us a single-node server (config.cluster.enabled
+# and config.jetstream.enabled are both false out of the box). Only pinning
+# resources here since the chart ships none by default.
+container:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
