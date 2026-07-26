@@ -33,3 +33,42 @@ patches:
     kind: Pod
     metadata:
       name: temporal-test-cluster-health
+
+# The chart's schema-init Job comes tagged as a Helm pre-install/pre-upgrade
+# hook, which ArgoCD maps to its PreSync phase - that phase always runs
+# before every other resource in the app, including our own postgres.yaml
+# and the ExternalSecret/Password generator this Job needs to already exist.
+# Re-tagged as an ArgoCD "Sync" hook instead: same create/wait/delete
+# semantics, but ordered by sync-wave alongside normal resources rather than
+# jumping the whole queue.
+- target:
+    kind: Job
+    name: temporal-schema
+  patch: |-
+    - op: remove
+      path: /metadata/annotations/helm.sh~1hook
+    - op: remove
+      path: /metadata/annotations/helm.sh~1hook-delete-policy
+    - op: remove
+      path: /metadata/annotations/helm.sh~1hook-weight
+    - op: add
+      path: /metadata/annotations/argocd.argoproj.io~1hook
+      value: Sync
+    - op: add
+      path: /metadata/annotations/argocd.argoproj.io~1hook-delete-policy
+      value: BeforeHookCreation,HookSucceeded
+    - op: add
+      path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+      value: "1"
+
+# Server components need the schema job (wave 1) to have run first - Postgres
+# and the generated secret stay at the default wave 0.
+- target:
+    kind: Deployment
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: unused
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
