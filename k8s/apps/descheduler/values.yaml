@@ -1,0 +1,8 @@
+# Chart default is `kind: CronJob`, which spins up a fresh one-shot Job pod
+# every tick. Run it as a Deployment instead so it's a persistent controller
+# that reschedules itself on its own deschedulingInterval (chart default: 5m).
+kind: Deployment
+
+# Chart default deschedulerPolicy already balances on
+# RemovePodsViolatingTopologySpreadConstraint + LowNodeUtilization, which is
+# exactly the even-distribution behavior we want, so it's left untouched.
