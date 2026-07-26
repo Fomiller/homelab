@@ -1,7 +1,7 @@
 {
   "appName": "nats",
   "userGivenName": "nats",
-  "destNamespace": "default",
+  "destNamespace": "nats",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "k8s/apps/nats",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",

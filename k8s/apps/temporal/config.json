@@ -1,7 +1,7 @@
 {
   "appName": "temporal",
   "userGivenName": "temporal",
-  "destNamespace": "default",
+  "destNamespace": "temporal",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "k8s/apps/temporal",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",
