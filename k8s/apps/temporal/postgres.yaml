@@ -1,0 +1,69 @@
+# Temporal's bundled Postgres backend. Plain StatefulSet rather than a
+# subchart because the current temporal/temporal chart (unlike older
+# versions of it) ships with zero bundled datastores - you always wire
+# persistence up to a Postgres/MySQL/Cassandra/Elasticsearch you bring
+# yourself, so there's nothing to "disable" to get Postgres-only behavior.
+# The `temporal` user is the Postgres superuser (POSTGRES_USER on the
+# official image), which is what lets the chart's schema-setup job create
+# both the temporal and temporal_visibility databases itself (values.yaml
+# createDatabase: true, defaulted true by the chart either way).
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-postgres
+spec:
+  selector:
+    app: temporal-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: temporal-postgres
+spec:
+  serviceName: temporal-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal-postgres
+  template:
+    metadata:
+      labels:
+        app: temporal-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: temporal
+            - name: POSTGRES_DB
+              value: temporal
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-postgres-secret
+                  key: password
+            # Longhorn-formatted volumes land a lost+found dir at the mount
+            # root, which trips initdb's "directory not empty" check unless
+            # PGDATA is a subdirectory of the mount instead of the mount
+            # itself.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 5Gi

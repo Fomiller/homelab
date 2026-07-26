@@ -1,0 +1,30 @@
+# This chart has no bundled datastore subcharts to disable (no Cassandra/
+# Elasticsearch dependency, unlike older versions of it) - every store is
+# always wired up explicitly, so pointing both stores at SQL/Postgres here
+# is the whole story for "Postgres only, no Cassandra/ES".
+server:
+  config:
+    persistence:
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12
+            databaseName: temporal
+            connectAddr: "temporal-postgres.temporal.svc.cluster.local:5432"
+            connectProtocol: tcp
+            user: temporal
+            existingSecret: temporal-postgres-secret
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          sql:
+            pluginName: postgres12
+            databaseName: temporal_visibility
+            connectAddr: "temporal-postgres.temporal.svc.cluster.local:5432"
+            connectProtocol: tcp
+            user: temporal
+            existingSecret: temporal-postgres-secret
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
