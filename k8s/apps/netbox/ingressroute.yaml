@@ -1,0 +1,22 @@
+# netbox.fomiller.com is already covered by the *.fomiller.com wildcard DNS
+# record and the tunnel's wildcard ingress (both in infra/units/cloudflare),
+# which forward every subdomain to this Traefik instance. Exposing NetBox is
+# therefore a k8s-only change: Traefik routes to it by Host header here.
+#
+# Not added to infra/units/cloudflare/global/tunnels/_variables.tf
+# protected_hostnames - NetBox has its own Django login, so it doesn't need
+# the Cloudflare Access gate (same reasoning as authentik/wikijs/romm/supabase).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: netbox
+  namespace: netbox
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`netbox.fomiller.com`)
+      kind: Rule
+      services:
+        - name: netbox
+          port: 80

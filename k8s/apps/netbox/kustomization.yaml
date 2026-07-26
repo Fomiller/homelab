@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: netbox
+
+resources:
+- namespace.yaml
+- ingressroute.yaml
+
+helmCharts:
+- name: netbox
+  # Not charts.netbox.dev (that hostname doesn't resolve/no longer exists) -
+  # see the netbox-community/netbox-chart README for the current repo.
+  repo: https://charts.netbox.oss.netboxlabs.com/
+  releaseName: netbox
+  includeCRDs: true
+  version: 8.3.38
+  namespace: netbox
+  valuesFile: values.yaml
+
+# `helm template` (which the helmCharts inflator above shells out to) renders
+# the chart's helm.sh/hook: test Pod inline unless passed --no-hooks, and
+# kustomize has no knob for that - so netbox-test-connection would otherwise
+# be applied and left running by ArgoCD. It's only meant to run via
+# `helm test`; drop it here (same issue/fix as k8s/apps/supabase).
+patches:
+- target:
+    kind: Pod
+    name: netbox-test-connection
+  patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: unused
