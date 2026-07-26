@@ -10,6 +10,11 @@ persistence:
   # Longhorn is already this cluster's default StorageClass; set explicitly
   # for clarity, matching the other apps that use PVCs.
   storageClass: longhorn
+  # Default is ReadWriteOnce, which two different Deployments (netbox web +
+  # netbox-worker) both mounting the same media PVC can't share once the
+  # scheduler puts them on different nodes - Longhorn's RWX (share-manager
+  # backed) support handles that.
+  accessMode: ReadWriteMany
 
 postgresql:
   primary:
