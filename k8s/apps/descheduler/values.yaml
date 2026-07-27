@@ -18,6 +18,13 @@ deschedulerPolicy:
         - name: DefaultEvictor
           args:
             nodeFit: true
+            # Opt-in gate: without this, descheduler considers every pod in
+            # the cluster fair game. Only pods carrying this label get
+            # evicted by any strategy below - add it to a Deployment's pod
+            # template once you actually want descheduler managing it.
+            labelSelector:
+              matchLabels:
+                descheduler.io/enabled: "true"
             podProtections:
               defaultDisabled:
                 - "PodsWithLocalStorage"
