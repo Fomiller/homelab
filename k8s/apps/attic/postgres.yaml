@@ -1,0 +1,38 @@
+# Attic's metadata store: which NARs exist, which chunks they're made of, and
+# which cache owns what. Losing it orphans every object in S3, so this is the
+# part worth replicating.
+#
+# CNPG generates the attic-db-app Secret (username/password/host/dbname plus a
+# ready-made `uri`), which deployment.yaml feeds straight to
+# ATTIC_SERVER_DATABASE_URL. Nothing here needs Doppler.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: attic-db
+  namespace: attic
+spec:
+  instances: 2
+
+  # Pinned rather than left to the operator's built-in default, which moves
+  # with the chart version. CNPG refuses an implicit major-version jump, so an
+  # unpinned image turns a routine chart bump into a stuck cluster.
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+
+  bootstrap:
+    initdb:
+      database: attic
+      owner: attic
+
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+
+  monitoring:
+    enablePodMonitor: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi

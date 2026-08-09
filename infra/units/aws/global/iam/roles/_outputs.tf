@@ -9,3 +9,7 @@ output "iam_role_name_doppler_operator" {
 output "iam_role_name_loki" {
   value = aws_iam_role.loki_irsa.name
 }
+
+output "iam_role_name_attic" {
+  value = aws_iam_role.attic_irsa.name
+}

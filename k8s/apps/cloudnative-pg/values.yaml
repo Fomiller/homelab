@@ -1,0 +1,10 @@
+# Operator defaults are fine — it watches all namespaces and owns no
+# Postgres of its own. The only consumer today is k8s/apps/attic.
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+  limits:
+    memory: 500Mi

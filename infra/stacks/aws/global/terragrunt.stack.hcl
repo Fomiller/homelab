@@ -70,6 +70,7 @@ unit "iam_policies" {
         iam_role_name_external_secrets = "FomillerExternalSecretsOperator"
         iam_role_name_doppler_operator = "FomillerDopplerOperator"
         iam_role_name_loki             = "FomillerLokiS3Access"
+        iam_role_name_attic            = "FomillerAtticS3Access"
       }
     }
     dependency "s3" {
@@ -80,15 +81,18 @@ unit "iam_policies" {
         s3_bucket_name_loki_chunks = "fomiller-MOCK-homelab-loki-chunks"
         s3_bucket_name_loki_ruler  = "fomiller-MOCK-homelab-loki-ruler"
         s3_bucket_name_loki_admin  = "fomiller-MOCK-homelab-loki-admin"
+        s3_bucket_name_attic       = "fomiller-MOCK-homelab-attic"
       }
     }
     inputs = {
       iam_role_name_external_secrets = dependency.roles.outputs.iam_role_name_external_secrets
       iam_role_name_doppler_operator = dependency.roles.outputs.iam_role_name_doppler_operator
       iam_role_name_loki             = dependency.roles.outputs.iam_role_name_loki
+      iam_role_name_attic            = dependency.roles.outputs.iam_role_name_attic
       s3_bucket_name_loki_chunks     = dependency.s3.outputs.s3_bucket_name_loki_chunks
       s3_bucket_name_loki_ruler      = dependency.s3.outputs.s3_bucket_name_loki_ruler
       s3_bucket_name_loki_admin      = dependency.s3.outputs.s3_bucket_name_loki_admin
+      s3_bucket_name_attic           = dependency.s3.outputs.s3_bucket_name_attic
     }
   }
 }
