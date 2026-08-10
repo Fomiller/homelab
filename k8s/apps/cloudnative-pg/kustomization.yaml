@@ -3,6 +3,11 @@ kind: Kustomization
 
 resources:
 - namespace.yaml
+# barman-cloud is what actually writes backups to S3 — CNPG 1.30 still has the
+# in-tree spec.backup.barmanObjectStore, but it's deprecated in favour of this.
+# Installs into cnpg-system alongside the operator. Needs cert-manager, which
+# issues the certs for the plugin's gRPC endpoint.
+- https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.14.0/manifest.yaml
 
 helmCharts:
 - name: cloudnative-pg

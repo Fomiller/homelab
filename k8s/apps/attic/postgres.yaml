@@ -12,9 +12,26 @@ metadata:
   namespace: attic
 spec:
   # Single instance on purpose. A second one buys failover, and an atticd
-  # outage just means Nix falls back to cache.nixos.org. What actually
-  # protects this data is a backup, which is tracked separately.
+  # outage just means Nix falls back to cache.nixos.org. Durability comes from
+  # the barman-cloud backups below, not from a replica.
   instances: 1
+
+  # barman-cloud writes base backups and archives WAL to S3. isWALArchiver
+  # is what makes recovery continuous — without it you can only restore to
+  # the last base backup.
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: attic-db-backup
+
+  # IRSA for the backup sidecar. CNPG names the ServiceAccount after the
+  # cluster, so the role's trust policy pins sub to
+  # system:serviceaccount:attic:attic-db-cnpg — renaming the cluster breaks it.
+  serviceAccountTemplate:
+    metadata:
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerCnpgBackupS3Access
 
   # Pinned rather than left to the operator's built-in default, which moves
   # with the chart version. CNPG refuses an implicit major-version jump, so an

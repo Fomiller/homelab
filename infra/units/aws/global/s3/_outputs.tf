@@ -21,3 +21,7 @@ output "s3_bucket_name_loki_admin" {
 output "s3_bucket_name_attic" {
   value = aws_s3_bucket.attic.id
 }
+
+output "s3_bucket_name_cnpg_backups" {
+  value = aws_s3_bucket.cnpg_backups.id
+}

@@ -112,3 +112,26 @@ resource "aws_s3_bucket_public_access_block" "attic" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# Postgres base backups and WAL segments written by the barman-cloud plugin
+# for the CNPG clusters. Retention is barman's job, not S3's — a lifecycle
+# rule here would happily expire the WAL segments a base backup still needs,
+# which leaves a backup that restores to nothing.
+resource "aws_s3_bucket" "cnpg_backups" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-cnpg-backups"
+
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "cnpg_backups" {
+  bucket = aws_s3_bucket.cnpg_backups.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

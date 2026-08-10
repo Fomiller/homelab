@@ -1,0 +1,26 @@
+# Where barman-cloud writes base backups and WAL segments for attic-db-cnpg.
+#
+# Credentials are IRSA, same as atticd: inheritFromIAMRole means the sidecar
+# uses the web-identity token the pod-identity webhook injects, so there are
+# no keys here. The role is assumed via the attic-db-cnpg ServiceAccount,
+# annotated in postgres.yaml.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: attic-db-backup
+  namespace: attic
+spec:
+  configuration:
+    destinationPath: s3://fomiller-dev-homelab-cnpg-backups/attic-db-cnpg
+    s3Credentials:
+      inheritFromIAMRole: true
+
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+
+  # Barman enforces this itself, which is why the bucket has no lifecycle
+  # rule — S3 expiring a WAL segment that a base backup still needs would
+  # leave a backup that restores to nothing.
+  retentionPolicy: 30d
