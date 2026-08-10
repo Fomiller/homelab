@@ -1,14 +1,14 @@
 # Attic's metadata store: which NARs exist, which chunks they're made of, and
 # which cache owns what. Losing it orphans every object in S3, so this is the
-# part worth replicating.
+# part that needs a backup.
 #
-# CNPG generates the attic-db-app Secret (username/password/host/dbname plus a
-# ready-made `uri`), which deployment.yaml feeds straight to
+# CNPG generates the attic-db-cnpg-app Secret (username/password/host/dbname
+# plus a ready-made `uri`), which deployment.yaml feeds straight to
 # ATTIC_SERVER_DATABASE_URL. Nothing here needs Doppler.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: attic-db
+  name: attic-db-cnpg
   namespace: attic
 spec:
   # Single instance on purpose. A second one buys failover, and an atticd

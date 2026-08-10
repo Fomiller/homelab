@@ -17,7 +17,7 @@ home-manager switch -> /nix/store -> attic watch-store -> atticd -> S3
 
 - **atticd** — one replica, monolithic mode, so the garbage collector runs
   in-process. That's why the Deployment uses `Recreate`.
-- **Postgres** — CloudNativePG `Cluster` (`attic-db`), 2 instances on Longhorn.
+- **Postgres** — CloudNativePG `Cluster` (`attic-db-cnpg`), single instance on Longhorn.
   Holds the NAR/chunk index. Losing it orphans everything in the bucket.
 - **S3** — `fomiller-dev-homelab-attic`, created in
   `infra/units/aws/global/s3`. Access is IRSA, no static keys: the
@@ -57,7 +57,7 @@ nix run nixpkgs#openssl -- genrsa -traditional 4096 | base64 | tr -d '\n'
 
 Put it in Doppler, project `attic`, config `dev`, as
 `ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64`. That's the only secret this app
-needs — Postgres credentials come from CNPG's generated `attic-db-app` Secret
+needs — Postgres credentials come from CNPG's generated `attic-db-cnpg-app` Secret
 and S3 comes from IRSA.
 
 Rotating this key invalidates every token ever minted, including the netrc
