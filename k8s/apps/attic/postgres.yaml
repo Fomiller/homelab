@@ -11,7 +11,10 @@ metadata:
   name: attic-db
   namespace: attic
 spec:
-  instances: 2
+  # Single instance on purpose. A second one buys failover, and an atticd
+  # outage just means Nix falls back to cache.nixos.org. What actually
+  # protects this data is a backup, which is tracked separately.
+  instances: 1
 
   # Pinned rather than left to the operator's built-in default, which moves
   # with the chart version. CNPG refuses an implicit major-version jump, so an
@@ -23,8 +26,11 @@ spec:
       database: attic
       owner: attic
 
+  # Chunk metadata only, no blobs — the NARs live in S3. Measured at 8 MB
+  # after migrations. Longhorn can grow a volume but not shrink one, so this
+  # is sized to the workload rather than rounded up.
   storage:
-    size: 10Gi
+    size: 3Gi
     storageClass: longhorn
 
   monitoring:
@@ -33,6 +39,6 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 128Mi
     limits:
-      memory: 1Gi
+      memory: 512Mi
