@@ -13,3 +13,9 @@ output "client_secret" {
 output "issuer_url" {
   value = "${local.authentik_url}/application/o/${authentik_application.cloudflare_access.slug}/"
 }
+
+# The IdP metadata XML pasted into the Identity Center external-IdP wizard.
+# Empty until the AWS_SSO_* secrets are set (see aws-sso.tf).
+output "aws_sso_saml_metadata" {
+  value = try(data.authentik_provider_saml_metadata.aws[0].metadata, "")
+}

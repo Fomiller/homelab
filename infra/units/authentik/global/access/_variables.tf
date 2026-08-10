@@ -26,3 +26,43 @@ variable "authentik_google_client_secret" {
   sensitive = true
   default   = ""
 }
+
+# AWS IAM Identity Center (see aws-sso.tf). All four come off the Identity
+# Center settings page in the management account and have no value until it's
+# been enabled there, so they default empty and leave the resources dormant.
+# Doppler secret names: AWS_SSO_ACS_URL, AWS_SSO_AUDIENCE, AWS_SSO_PORTAL_URL,
+# AWS_SSO_SCIM_URL, AWS_SSO_SCIM_TOKEN.
+#
+# acs_url and audience come from the "AWS access portal SAML" details shown
+# when the identity source is switched to an external IdP:
+#   https://<region>.signin.aws.amazon.com/platform/saml/acs/<uuid>
+#   https://<region>.signin.aws.amazon.com/platform/saml/<uuid>
+variable "aws_sso_acs_url" {
+  type    = string
+  default = ""
+}
+
+variable "aws_sso_audience" {
+  type    = string
+  default = ""
+}
+
+# https://d-xxxxxxxxxx.awsapps.com/start, or the custom subdomain if one is
+# set. Only used for the tile on the authentik dashboard — login normally
+# starts at this URL, not in authentik.
+variable "aws_sso_portal_url" {
+  type    = string
+  default = ""
+}
+
+# Shown once, when automatic provisioning is enabled on that same page.
+variable "aws_sso_scim_url" {
+  type    = string
+  default = ""
+}
+
+variable "aws_sso_scim_token" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
