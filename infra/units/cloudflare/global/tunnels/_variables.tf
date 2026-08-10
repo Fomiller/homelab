@@ -59,6 +59,16 @@ variable "protected_hostnames" {
   ]
 }
 
+# How many destinations one Access application takes. Over this, the API
+# rejects the whole app with "too many destinations for one app", so the list
+# above is split across as many apps as it needs. Ordering matters: appending
+# to protected_hostnames only ever adds to the last app, while inserting in
+# the middle reshuffles every chunk after it.
+variable "access_destinations_per_app" {
+  type    = number
+  default = 5
+}
+
 # Optional — authentik as an in-cluster OIDC sign-in option. Leave unset
 # until authentik/global/access has created the OAuth2 provider/application
 # against a running authentik instance. Doppler secret names:
