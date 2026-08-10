@@ -44,50 +44,15 @@ variable "allowed_emails" {
   ]
 }
 
-# *.fomiller.com hostnames gated behind Cloudflare Access — add a hostname
-# here to bring a new app under the same login wall, no other Terraform
-# changes needed.
-variable "protected_hostnames" {
-  type = list(string)
-  default = [
-    "home.fomiller.com",
-    "argocd.fomiller.com",
-    "grafana.fomiller.com",
-    "longhorn.fomiller.com",
-    "redpanda.fomiller.com",
-    "temporal.fomiller.com",
-    "netbox.fomiller.com",
-    "romm.fomiller.com",
-    "supabase.fomiller.com",
-    "wiki.fomiller.com",
-  ]
-}
-
-# Reachable without an Access session. Both are deliberate and neither can be
-# moved behind Access:
-#
-# - authentik is the IdP the Access redirect points at, so gating it on Access
-#   is a loop.
-# - attic is a Nix substituter. Nix can't follow an SSO redirect and can't set
-#   the CF-Access-Client-* headers a service token needs. Its own JWT auth is
-#   the control — an unauthenticated request gets a 401 from Attic itself.
-#
-# Adding to this list puts something on the public internet. Adding to
-# protected_hostnames does not. Anything in neither list gets a 404 from the
-# tunnel and is checked by scripts/check-ingress-exposure.py.
-variable "public_hostnames" {
-  type = list(string)
-  default = [
-    "authentik.fomiller.com",
-    "attic.fomiller.com",
-  ]
-}
+# The hostname lists live in _locals.tf. They're facts about what this cluster
+# runs, not knobs a caller tunes, and making them variables would let a stack
+# silently override which hostnames are public.
 
 # How many destinations one Access application takes. Over this, the API
-# rejects the whole app with "too many destinations for one app", so the list
-# above is split across as many apps as it needs. Ordering matters: appending
-# to protected_hostnames only ever adds to the last app, while inserting in
-# the middle reshuffles every chunk after it.
+# rejects the whole app with "too many destinations for one app", so
+# local.protected_hostnames is split across as many apps as it needs. Ordering
+# matters: appending to that list only ever adds to the last app, while
+# inserting in the middle reshuffles every chunk after it.
 variable "access_destinations_per_app" {
   type    = number
   default = 5

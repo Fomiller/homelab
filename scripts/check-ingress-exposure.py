@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-TFVARS = REPO / "infra/units/cloudflare/global/tunnels/_variables.tf"
+TFLOCALS = REPO / "infra/units/cloudflare/global/tunnels/_locals.tf"
 K8S = REPO / "k8s"
 
 # The tunnel unit only routes this zone, so a Host() rule for anything else
@@ -23,15 +23,22 @@ ZONE = "fomiller.com"
 
 
 def tf_list(name: str) -> list[str]:
-    """Pull the default of a list(string) variable out of the .tf file."""
+    """Pull a list-of-strings local out of the .tf file.
+
+    Deliberately strict: an empty result means the file was restructured and
+    the check would silently pass on everything, so treat it as an error.
+    """
     block = re.search(
-        r'variable\s+"%s"\s*\{.*?default\s*=\s*\[(.*?)\]' % re.escape(name),
-        TFVARS.read_text(),
-        re.DOTALL,
+        r"^\s*%s\s*=\s*\[(.*?)^\s*\]" % re.escape(name),
+        TFLOCALS.read_text(),
+        re.DOTALL | re.MULTILINE,
     )
     if not block:
-        sys.exit(f"could not find variable {name!r} in {TFVARS}")
-    return re.findall(r'"([^"]+)"', block.group(1))
+        sys.exit(f"could not find local {name!r} in {TFLOCALS}")
+    hostnames = re.findall(r'"([^"]+)"', block.group(1))
+    if not hostnames:
+        sys.exit(f"local {name!r} in {TFLOCALS} parsed as empty")
+    return hostnames
 
 
 def ingress_hostnames() -> dict[str, list[str]]:
@@ -87,7 +94,7 @@ def main() -> int:
         print(
             "Add each to protected_hostnames (behind Access) or, only if it "
             "genuinely cannot use Access, to public_hostnames.\n"
-            f"Both live in {TFVARS.relative_to(REPO)}."
+            f"Both live in {TFLOCALS.relative_to(REPO)}."
         )
         return 1
 

@@ -33,7 +33,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "this" {
   config = {
     ingress = concat(
       [
-        for hostname in concat(var.protected_hostnames, var.public_hostnames) : {
+        for hostname in local.tunnel_hostnames : {
           hostname = hostname
           service  = var.tunnel_target_service
         }
@@ -52,10 +52,10 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
 }
 
 locals {
-  # authentik.<zone_name> is routed by the tunnel via var.public_hostnames and
-  # deliberately stays out of var.protected_hostnames — it's the login page/IdP
-  # the Access redirect below depends on, so it has to be reachable without an
-  # Access session already established.
+  # authentik.<zone_name> is routed by the tunnel via local.public_hostnames
+  # and deliberately stays out of local.protected_hostnames — it's the login
+  # page/IdP the Access redirect below depends on, so it has to be reachable
+  # without an Access session already established.
   authentik_base_url = "https://authentik.${var.zone_name}"
 }
 
@@ -99,7 +99,7 @@ resource "cloudflare_zero_trust_access_policy" "allow" {
 # fails open, since the tunnel's *.zone_name ingress routes it regardless.
 locals {
   protected_hostname_chunks = {
-    for i, chunk in chunklist(var.protected_hostnames, var.access_destinations_per_app) :
+    for i, chunk in chunklist(local.protected_hostnames, var.access_destinations_per_app) :
     tostring(i) => chunk
   }
 }
