@@ -18,7 +18,8 @@ home-manager switch -> /nix/store -> attic watch-store -> atticd -> S3
 - **atticd** — one replica, monolithic mode, so the garbage collector runs
   in-process. That's why the Deployment uses `Recreate`.
 - **Postgres** — CloudNativePG `Cluster` (`attic-db-cnpg`), single instance on Longhorn.
-  Holds the NAR/chunk index. Losing it orphans everything in the bucket.
+  Holds the NAR/chunk index. Losing it orphans everything in the bucket, which
+  is why it's the one piece with backups — see [Backups](#backups).
 - **S3** — `fomiller-dev-homelab-attic`, created in
   `infra/units/aws/global/s3`. Access is IRSA, no static keys: the
   `attic` ServiceAccount carries the role annotation and
@@ -73,27 +74,66 @@ kubectl -n attic logs deploy/attic
 Expect `Starting API server...` and `Listening on...`. Migrations run at
 startup; the startup probe allows 5 minutes.
 
-### 3. Mint an admin token
+### 3. Mint the tokens
 
-`atticadm` is in the image and reads the signing key from the pod's env.
+`atticadm` is in the image and reads the signing key from the pod's env. Two
+tokens, because the Macs have no business creating or deleting caches:
 
 ```sh
-kubectl -n attic exec deploy/attic -- /bin/atticadm -f /etc/atticd/server.toml \
-  make-token --sub admin --validity '1h' \
-  --create-cache 'homelab' --configure-cache 'homelab' \
-  --push 'homelab' --pull 'homelab'
+# admin — server-side only
+kubectl -n attic exec deploy/attic -- atticadm -f /etc/atticd/server.toml \
+  make-token --sub admin --validity 1y \
+  --pull '*' --push '*' --delete '*' \
+  --create-cache '*' --configure-cache '*' --configure-cache-retention '*'
+
+# macs — pull and push on the one cache
+kubectl -n attic exec deploy/attic -- atticadm -f /etc/atticd/server.toml \
+  make-token --sub macs --validity 1y --pull main --push main
+```
+
+Store both in Doppler, project `attic`, config `dev`, as `ATTIC_TOKEN_ADMIN`
+and `ATTIC_TOKEN_MACS`. Pipe them in rather than pasting, so they stay out of
+your shell history:
+
+```sh
+printf '%s' "$TOKEN" | doppler secrets set ATTIC_TOKEN_MACS \
+  --project attic --config dev --no-interactive --silent
+```
+
+Check a token's scope before trusting it. `--dump-claims` skips signing and
+prints what's in it:
+
+```sh
+kubectl -n attic exec deploy/attic -- atticadm -f /etc/atticd/server.toml \
+  make-token --sub macs --validity 1y --pull main --push main --dump-claims
+# {"caches":{"main":{"r":1,"w":1}}}  <- r/w only, no d/cc/cr/cq
 ```
 
 ### 4. Create the cache
 
+The cache is called `main`, not `homelab` — both Macs pull from it, so
+`homelab` described where the server runs rather than what's in it.
+
 ```sh
-attic login fomiller https://attic.fomiller.com '<admin token>'
-attic cache create homelab
-attic cache info homelab
+attic login fomiller https://attic.fomiller.com "$ATTIC_TOKEN_ADMIN"
+attic cache create main
+attic cache info main
 ```
 
-`cache info` prints the public key, `homelab:...`. Leave the cache private —
+`cache info` prints the public key, `main:...`. Leave the cache private —
 that's the default, don't pass `--public`.
+
+If the `attic` CLI isn't installed yet (chicken-and-egg on a fresh machine),
+the HTTP API does the same thing. Note the capital G — the field is an
+externally-tagged enum and `generate` is rejected:
+
+```sh
+curl -sS -X POST -H "Authorization: Bearer $ATTIC_TOKEN_ADMIN" \
+  -H 'Content-Type: application/json' \
+  -d '{"keypair":"Generate","is_public":false,"store_dir":"/nix/store",
+       "priority":41,"upstream_cache_key_names":["cache.nixos.org-1"]}' \
+  https://attic.fomiller.com/_api/v1/cache-config/main
+```
 
 ### 5. Wire up the Nix config
 
@@ -104,53 +144,88 @@ nothing is half-configured against a cache that doesn't exist yet.
 
 ### 6. Per-machine setup
 
-Once per Mac. Neither step can be committed — both handle credentials.
-
-Mint a token for the machine:
+Once per Mac:
 
 ```sh
-kubectl -n attic exec deploy/attic -- /bin/atticadm -f /etc/atticd/server.toml \
-  make-token --sub nimbus --validity '1y' --push 'homelab' --pull 'homelab'
+just attic-login      # sudo prompt is your Mac login password
+just rebuild nimbus
 ```
 
-Log the client in, which writes `~/.config/attic/config.toml` (0600). This is
-what `attic watch-store` authenticates with:
+`attic-login` pulls `ATTIC_TOKEN_MACS` from Doppler and writes it to two
+places, because they have different consumers:
+
+- `~/.config/attic/config.toml` (0600) — the `attic` CLI and the watch-store
+  agent read this.
+- `/etc/nix/attic-token` (root, 0600) — the nix-darwin activation script in
+  `modules/darwin/attic-netrc` reads this.
+
+The activation script is what puts the token in `/nix/var/determinate/netrc`,
+which is where the **Nix daemon** looks. Substitution happens in the daemon,
+not in your shell, so config.toml alone isn't enough.
+
+Three things to know about that netrc:
+
+- It's Determinate's, not ours. `netrc-file` is set in Determinate's own
+  `/etc/nix/nix.conf` **after** the `!include` of `nix.custom.conf`, so it wins
+  over anything `determinateNix.customSettings` says. The path can't be moved.
+- `determinate-nixd login` rewrites it for FlakeHub auth and drops the attic
+  line. Recovery is `just rebuild <host>` — the activation script re-adds it
+  and leaves the FlakeHub entries alone.
+- It stays mode 0644 because the nix **client**, not just the daemon, reads it
+  for FlakeHub flake fetches. So the push token is readable by any local user.
+  That's why it's scoped to one cache with an expiry.
+
+The token can't live in the repo — `/nix/store` is world-readable — so
+`just attic-login` is the one manual step per machine. Moving it to sops-nix
+would only change where `tokenFile` points in the activation script.
+
+Don't run `attic use`. It rewrites `~/.config/nix/nix.conf` behind
+home-manager's back.
+
+### 7. Seed the cache
+
+`watch-store` only uploads paths created *after* it starts, so a fresh cache
+stays empty until you happen to rebuild something. Push the existing closures
+once:
 
 ```sh
-attic login fomiller https://attic.fomiller.com '<machine token>'
+attic push fomiller:main ~/.local/state/nix/profiles/home-manager
+attic push fomiller:main /nix/var/nix/profiles/system
 ```
 
-Then give the **Nix daemon** the same token. Substitution happens in the daemon,
-not in your shell, so the client's config.toml isn't enough:
-
-```sh
-sudo tee -a /nix/var/determinate/netrc >/dev/null <<EOF
-machine attic.fomiller.com login attic password <machine token>
-EOF
-```
-
-Two things to know about that file:
-
-- It's Determinate's, not ours. `netrc-file` is pinned to it in Determinate's
-  own `/etc/nix/nix.conf` and the nix-darwin module asserts against overriding
-  it, so this is the only place the daemon will look.
-- It's mode 0644 and `determinate-nixd login` rewrites it for FlakeHub auth. If
-  pulls start 401-ing, check the attic line is still there.
-
-Finally apply, and don't run `attic use` — it rewrites `~/.config/nix/nix.conf`
-behind home-manager's back:
-
-```sh
-just switch nimbus
-```
+It walks the closure and skips anything already signed by cache.nixos.org, so
+most of it never leaves the machine. Measured on nimbus: 100 paths queued out
+of 739, 96 uploaded, 4 rejected on size (see below). Expect a non-zero exit
+when anything is over the cap.
 
 ## Verifying
 
 Cache is actually private:
 
 ```sh
-curl -s -o /dev/null -w '%{http_code}\n' https://attic.fomiller.com/homelab/nix-cache-info
-# 401
+curl -s -o /dev/null -w '%{http_code}\n' https://attic.fomiller.com/main/nix-cache-info
+# 401 without a token, 200 with one
+```
+
+Client wiring on a Mac, all four should hold:
+
+```sh
+grep -c '^machine attic.fomiller.com ' /nix/var/determinate/netrc   # 1
+nix config show | grep -E '^substituters' | tr ' ' '\n' | grep attic
+nix config show | grep -o 'main:[A-Za-z0-9+/=]*'
+launchctl list | grep attic-watch-store
+```
+
+The substituter must appear in the plain `substituters =` line, not just
+`trusted-substituters`. `trusted-substituters` only pre-approves what an
+already-trusted user may request; it isn't used on its own.
+
+What's actually in the cache:
+
+```sh
+kubectl -n attic exec attic-db-cnpg-1 -c postgres -- \
+  psql -U postgres -d attic -tAc \
+  "select (select count(*) from object) objects, (select count(*) from nar) nars"
 ```
 
 Push path works end to end:
@@ -167,31 +242,154 @@ pushed:
 nix build .#homeConfigurations.flock.activationPackage --dry-run
 ```
 
-Look for "will be fetched" rather than "will be built", and
-`nix config show | grep substituters` should list `attic.fomiller.com` in the
-plain `substituters =` line, not just `trusted-substituters`.
+Look for "will be fetched" rather than "will be built". During a real switch
+the giveaway is `copying path '/nix/store/...' from 'https://attic.fomiller.com/main'`.
+The four oversized packages below will still build locally — that's expected,
+not a failure.
 
 ## Known limitation: 100 MB pushes
 
 Cloudflare caps proxied request bodies at 100 MB on the Free and Pro plans, and
 Attic uploads each NAR as a single PUT. Anything larger comes back 413.
 
-In practice this is narrow. Attic skips store paths already signed by
-cache.nixos.org, so the big ones (grafana at 617 MB, apple-sdk at 459 MB, llvm
-at 384 MB, go at 213 MB) are never pushed regardless. Of the 34 locally-built
-paths in the current home-manager closure, totalling 217 MB, exactly one is over
-the cap: **raycast at 132 MB**. It won't cache.
+Attic skips store paths already signed by cache.nixos.org, so the really big
+ones (grafana at 617 MB, apple-sdk at 459 MB, llvm at 384 MB) are never pushed
+regardless. What's left is the locally-built set, and four of those are over
+the cap. Measured seeding nimbus:
 
-Where this could bite harder is a large package that falls out of the upstream
-cache and has to be built locally — the exact case the cache is most useful for.
-If that happens you'll see a 413 in the watch-store log. Options at that point,
-roughly in order of effort:
+| path | size | result |
+| --- | --- | --- |
+| claude-code | 318 MB | 502 |
+| holmesgpt | 211 MB | 413 |
+| raycast | 132 MB | 413 |
+| minikube | 111 MB | 413 |
+
+`claude-code` returns 502 rather than 413 because Cloudflare drops the
+connection partway through instead of rejecting it up front. Same cause. You
+can tell it's Cloudflare and not the origin by the `<center>cloudflare</center>`
+footer on the error body.
+
+These four rebuild locally on the second Mac. Everything else substitutes.
+
+Where this bites harder is a large package falling out of the upstream cache
+and having to be built locally — the exact case the cache is most useful for.
+You'll see a 413 in the watch-store log. Options at that point, roughly in
+order of effort:
 
 - `cloudflared access tcp` forwarder on each Mac, with an Access service-token
   policy. Removes the cap and takes the endpoint off the public internet.
 - Push over the tailnet from nimbus only, with `api-endpoint` unset so Attic
   derives it from the Host header.
 - Split-horizon DNS to the Traefik LoadBalancer plus a cert-manager cert.
+
+## Backups
+
+Only Postgres is backed up. The NARs in S3 are already durable, and rebuilding
+a lost store path is cheap — losing the metadata is what orphans the bucket.
+[FOM-127](https://linear.app/fomiller/issue/FOM-127).
+
+Backups go to `s3://fomiller-dev-homelab-cnpg-backups/attic-db-cnpg` via the
+`barman-cloud` CNPG-I plugin (`objectstore.yaml`), not the in-tree
+`spec.backup.barmanObjectStore`, which is deprecated on CNPG 1.30. Credentials
+are IRSA — the role's trust policy pins `sub` to
+`system:serviceaccount:attic:attic-db-cnpg`, so **renaming the cluster breaks
+the backups**.
+
+- Base backup nightly at 02:30 (`scheduledbackup.yaml`). The schedule is a
+  6-field cron because CNPG includes seconds — `0 30 2 * * *` is 02:30, not
+  30 seconds past 02:00.
+- WAL archived continuously, because the cluster sets `isWALArchiver: true`.
+  Without it you could only restore to the last base backup.
+- Retention 30d, enforced by barman. That's why the bucket has no lifecycle
+  rule: S3 expiring a WAL segment a base backup still needs would leave a
+  backup that restores to nothing.
+
+**Check it's healthy.**
+
+```sh
+kubectl -n attic get scheduledbackup,backup
+kubectl -n attic exec attic-db-cnpg-1 -c postgres -- \
+  psql -U postgres -tAc \
+  'select archived_count, failed_count, last_archived_wal, last_failed_time from pg_stat_archiver'
+```
+
+A non-zero `failed_count` isn't automatically a problem — compare
+`last_failed_time` against `last_archived_time`. Failures that all predate the
+last success are historical and the counter just never resets.
+
+**Trigger one by hand.**
+
+```sh
+kubectl -n attic create -f - <<'EOF'
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: attic-db-cnpg-manual-1
+  namespace: attic
+spec:
+  cluster:
+    name: attic-db-cnpg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+EOF
+```
+
+ArgoCD prunes the `Backup` object afterwards, since it isn't in git. The
+backup in S3 is unaffected — check there rather than in the cluster:
+
+```sh
+kubectl -n attic exec attic-db-cnpg-1 -c postgres -- \
+  barman-cloud-backup-list --cloud-provider aws-s3 \
+  s3://fomiller-dev-homelab-cnpg-backups/attic-db-cnpg attic-db-cnpg
+```
+
+**Restore** into a new cluster. Never restore over the live one — recovery
+bootstraps an empty cluster, so pointing it at the running PVC loses the thing
+you're trying to recover.
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: attic-db-cnpg-restore
+  namespace: attic
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+  storage:
+    size: 3Gi
+    storageClass: longhorn
+  serviceAccountTemplate:
+    metadata:
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerCnpgBackupS3Access
+  bootstrap:
+    recovery:
+      source: attic-db-cnpg
+      # add `recoveryTarget: {targetTime: "..."}` for point-in-time
+  externalClusters:
+  - name: attic-db-cnpg
+    plugin:
+      name: barman-cloud.cloudnative-pg.io
+      parameters:
+        barmanObjectName: attic-db-backup
+        serverName: attic-db-cnpg
+```
+
+The IRSA annotation matters here too: the restore cluster's ServiceAccount is
+named after *it*, so it won't match the role's trust policy. Either widen the
+trust policy or restore under a name the policy already allows.
+
+Then check the schema came back before pointing atticd at it:
+
+```sh
+kubectl -n attic exec attic-db-cnpg-restore-1 -c postgres -- \
+  psql -U postgres -d attic -tAc '\dt'
+```
+
+> The restore path above is written from the plugin's API, not from a drill.
+> Run it once against a scratch cluster before you need it.
 
 ## Operations
 
@@ -221,7 +419,19 @@ rejected before routing — which is why the kubelet probes set an explicit Host
 header.
 
 **401 on pull, 200 in the browser.** The daemon's netrc is missing the attic
-line, or the token expired. See per-machine setup above.
+line, or the token expired. Usually `determinate-nixd login` rewrote the file.
+
+```sh
+grep -c '^machine attic.fomiller.com ' /nix/var/determinate/netrc   # want 1
+just rebuild <host>                                                # re-adds it
+```
+
+If it's still missing after a rebuild, the bootstrap file is gone — check
+`sudo test -r /etc/nix/attic-token` and rerun `just attic-login`.
+
+**`Sorry, try again` during `just attic-login`.** That's `sudo` asking for your
+Mac login password, not a new one and not the attic token. `sudo -v` on its own
+tells you whether it's the recipe or your password.
 
 **Pod crashlooping on S3.** Check the IRSA wiring — the role's trust policy pins
 `sub` to `system:serviceaccount:attic:attic`, so renaming the ServiceAccount or
