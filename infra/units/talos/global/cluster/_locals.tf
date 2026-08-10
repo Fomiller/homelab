@@ -176,11 +176,14 @@ locals {
   worker_patch = yamlencode(merge(local.common_machine_patch, {
     machine = merge(local.common_machine_patch.machine, {
       nodeLabels = {
-        # Talos never set this, so ROLES showed <none> for workers and only
-        # the controlplanes (which set it in their own patch) read as workers.
-        # The two oldest workers had it from a manual `kubectl label`, which
-        # didn't carry to any node added since. Setting it here means a new
-        # worker gets it on join with no follow-up step.
+        # Declared here but NOT applied by Talos on workers. NodeRestriction
+        # forbids a kubelet from modifying node-role.kubernetes.io/* on its own
+        # Node, and NodeApplyController runs with node identity here. It's
+        # declared anyway so Talos doesn't try to *remove* a label that was set
+        # out-of-band, which is its own forbidden-error loop.
+        #
+        # A new worker still needs `kubectl label node <name>
+        # node-role.kubernetes.io/worker=` once. See README.md.
         "node-role.kubernetes.io/worker" = ""
       }
       # Kernel modules workers need for iSCSI-backed storage (Longhorn etc.)
