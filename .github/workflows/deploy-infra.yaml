@@ -48,12 +48,16 @@ jobs:
     name: 'Plan Infra (dev)'
     if: ${{ github.event_name == 'pull_request' }}
     needs: Pre-check
+    permissions:
+      id-token: write
+      contents: read
     uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
     with:
       environment: dev
       infra-dir: infra/live/dev
       doppler-project: homelab
       tg-plan: true
+      use-oidc: true
       use-tailscale: true
       tailscale-tags: tag:ci
     secrets: inherit
@@ -62,11 +66,15 @@ jobs:
     name: 'Apply Infra (dev)'
     if: ${{ github.event_name == 'push' }}
     needs: Pre-check
+    permissions:
+      id-token: write
+      contents: read
     uses: fomiller/gh-actions/.github/workflows/terragrunt.yaml@main
     with:
       environment: dev
       infra-dir: infra/live/dev
       doppler-project: homelab
+      use-oidc: true
       use-tailscale: true
       tailscale-tags: tag:ci
     secrets: inherit
