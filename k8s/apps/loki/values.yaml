@@ -47,6 +47,22 @@ loki:
 minio:
   enabled: false
 
+# IRSA. The role's trust policy pins sub to
+# system:serviceaccount:monitoring:loki, so renaming this SA or the namespace
+# breaks AssumeRoleWithWebIdentity.
+#
+# Without the annotation the pod-identity webhook injects nothing and Loki
+# fails every flush with "NoCredentialProviders: no valid providers in chain".
+# That's a missing-credentials error, not a permissions one.
+#
+# The webhook only injects at pod creation, so changing this needs a rollout,
+# not just a sync.
+serviceAccount:
+  create: true
+  name: loki
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerLokiS3Access
+
 deploymentMode: SingleBinary
 
 singleBinary:
@@ -138,11 +154,10 @@ resultsCache:
 #       http_config: {}
 #
 #
-# serviceAccount:
-#   create: true
-#   name: loki
-#   annotations:
-#     eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerLokiS3AccessRole
+# (a commented-out serviceAccount block lived here with the role name
+# FomillerLokiS3AccessRole, which does not exist — the role is
+# FomillerLokiS3Access. Removed so it can't get uncommented over the live
+# block above.)
 #
 # deploymentMode: SimpleScalable
 #
