@@ -8,6 +8,25 @@ locals {
   # Terraform-provider equivalent of a `--config-patch` file.
   common_machine_patch = {
     machine = {
+      # IPs, not time.cloudflare.com, so DNS is out of the boot path.
+      #
+      # After the 2026-08-09 outage all three controlplanes resolved that
+      # hostname to 139.78.100.163 (Oklahoma State, not Cloudflare) and every
+      # NTP query timed out. Talos's sync controller resolves once and retries
+      # the same address forever, so the cluster sat at synced:false for 40
+      # minutes. etcd, kubelet and trustd are all gated on time sync, so
+      # nothing came up until someone rebooted by hand.
+      #
+      # Both addresses are Cloudflare on purpose. A second provider would
+      # survive Cloudflare being unreachable, but Cloudflare and Google smear
+      # leap seconds differently, and mixing them makes the sources disagree
+      # for a day around a leap second. One provider, two anycast addresses.
+      time = {
+        servers = [
+          "162.159.200.123",
+          "162.159.200.1",
+        ]
+      }
       kubelet = {
         # Applies the container runtime's default seccomp profile to every pod
         # instead of running unconfined — a security hardening default.
@@ -110,10 +129,11 @@ locals {
       }
     })
     cluster = merge(local.common_machine_patch.cluster, {
-      # Only 2 real worker nodes exist; letting the 3 controlplane nodes take
-      # workload pods too spreads Longhorn/app load instead of leaving them
-      # idle while the 2 workers get overloaded (root cause of a kubelet
-      # health-check-timeout / NodeNotReady flapping incident).
+      # Set when only 2 worker nodes existed and the 3 controlplanes sat idle
+      # while those 2 got overloaded (root cause of a kubelet
+      # health-check-timeout / NodeNotReady flapping incident). There are 5
+      # workers now, so this is less load-bearing than it was, but turning it
+      # off would evict whatever currently runs on the controlplanes.
       allowSchedulingOnControlPlanes = true
       apiServer = {
         # Extra SANs so the API server's TLS cert is valid when reached via
@@ -155,6 +175,14 @@ locals {
   # Worker-only patch, merged on top of the common patch above.
   worker_patch = yamlencode(merge(local.common_machine_patch, {
     machine = merge(local.common_machine_patch.machine, {
+      nodeLabels = {
+        # Talos never set this, so ROLES showed <none> for workers and only
+        # the controlplanes (which set it in their own patch) read as workers.
+        # The two oldest workers had it from a manual `kubectl label`, which
+        # didn't carry to any node added since. Setting it here means a new
+        # worker gets it on join with no follow-up step.
+        "node-role.kubernetes.io/worker" = ""
+      }
       # Kernel modules workers need for iSCSI-backed storage (Longhorn etc.)
       # and network block devices — not loaded by default in the stock Talos
       # kernel.
