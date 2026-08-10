@@ -17,3 +17,7 @@ output "s3_bucket_name_loki_ruler" {
 output "s3_bucket_name_loki_admin" {
   value = aws_s3_bucket.loki_admin.id
 }
+
+output "s3_bucket_name_attic" {
+  value = aws_s3_bucket.attic.id
+}

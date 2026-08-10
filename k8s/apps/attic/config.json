@@ -1,0 +1,11 @@
+{
+  "appName": "attic",
+  "userGivenName": "attic",
+  "destNamespace": "attic",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/attic",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}

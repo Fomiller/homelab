@@ -1,0 +1,51 @@
+# atticd server config. Rendered into a ConfigMap by kustomize's
+# configMapGenerator, so the name carries a content hash and editing this file
+# rolls the Deployment instead of leaving a stale pod behind.
+#
+# No secrets in here. The database URL and the JWT signing key both come from
+# env vars (ATTIC_SERVER_DATABASE_URL, ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64)
+# that atticd falls back to when the matching config keys are absent.
+
+listen = "[::]:8080"
+
+# Enforced by the restrict_host middleware. Anything with a different Host
+# header is rejected before it reaches a route — including kubelet probes,
+# which is why deployment.yaml sets an explicit Host header on them.
+allowed-hosts = ["attic.fomiller.com"]
+
+# Handed to clients in cache-config responses, so it has to be the URL they can
+# actually reach. The trailing slash is required.
+api-endpoint = "https://attic.fomiller.com/"
+
+# Uploading a NAR requires actually holding it, not just knowing its hash.
+# Without this, anyone with push access to any cache could claim a
+# globally-deduplicated NAR they have never seen.
+require-proof-of-possession = true
+
+# Empty table on purpose — the url key defaults to reading
+# ATTIC_SERVER_DATABASE_URL, but serde still needs the table to exist.
+[database]
+
+[storage]
+type = "s3"
+region = "us-east-1"
+bucket = "fomiller-dev-homelab-attic"
+
+# Upstream defaults. Changing any of these shifts the content-defined chunking
+# cutpoints, so old and new chunks stop matching and the dedup ratio craters
+# until the cache turns over.
+[chunking]
+nar-size-threshold = 65536
+min-size = 16384
+avg-size = 65536
+max-size = 262144
+
+[compression]
+type = "zstd"
+
+[garbage-collection]
+interval = "12 hours"
+
+# signing is deliberately absent — it defaults to reading
+# ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64.
+[jwt]

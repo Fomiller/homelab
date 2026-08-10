@@ -1,0 +1,23 @@
+# attic.fomiller.com is covered by the *.fomiller.com wildcard DNS record and
+# the tunnel's wildcard ingress (infra/units/cloudflare), so exposing it is a
+# k8s-only change.
+#
+# It deliberately stays OUT of var.protected_hostnames: the Cloudflare Access
+# app in front of those hostnames does a browser SSO redirect against
+# authentik, and Nix can't follow one. Attic's own JWT auth is what guards
+# this endpoint instead — the cache is private, so an unauthenticated request
+# gets a 401.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: attic
+  namespace: attic
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`attic.fomiller.com`)
+      kind: Rule
+      services:
+        - name: attic
+          port: 8080

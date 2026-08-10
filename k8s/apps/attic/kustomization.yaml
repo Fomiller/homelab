@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: attic
+
+resources:
+- namespace.yaml
+- external-secrets.yaml
+- serviceaccount.yaml
+- postgres.yaml
+- deployment.yaml
+- service.yaml
+- ingressroute.yaml
+
+# Hash-suffixed, so editing server.toml rolls the Deployment. A plain
+# ConfigMap would leave the running pod on the old config until something
+# else happened to restart it.
+configMapGenerator:
+- name: attic-config
+  files:
+  - server.toml

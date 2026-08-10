@@ -82,10 +82,33 @@ resource "aws_s3_bucket" "loki_ruler" {
 
 resource "aws_s3_bucket" "loki_admin" {
   bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-loki-admin"
-    
+
   tags = {
     Owner       = "Forrest Miller"
     Email       = "forrestmillerj@gmail.com"
     Environment = var.environment
   }
+}
+
+# Nix binary cache artifacts (chunked NARs) for atticd. Attic runs its own
+# LRU garbage collection against this bucket, so no lifecycle rule here —
+# a rule expiring objects out from under the database would leave Attic
+# handing out 404s for chunks it still thinks exist.
+resource "aws_s3_bucket" "attic" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-attic"
+
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "attic" {
+  bucket = aws_s3_bucket.attic.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
