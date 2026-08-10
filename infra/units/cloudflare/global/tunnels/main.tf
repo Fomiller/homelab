@@ -17,21 +17,32 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "this" {
 # managed) instead of a local config file the cloudflared pod would need —
 # the pod only needs a token (see data.cloudflare_zero_trust_tunnel_cloudflared_token
 # below).
+#
+# One rule per hostname rather than a *.zone_name wildcard. The wildcard made
+# the tunnel fail open: anything Traefik answered for was public the moment
+# its DNS record existed, and Access only covered what someone remembered to
+# add to protected_hostnames. FOM-128 was that going wrong — an API error left
+# one hostname off the list and it served traffic unauthenticated for days.
+#
+# Now a hostname nobody listed gets the catch-all 404 and never reaches
+# Traefik at all.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "this" {
   account_id = var.cloudflare_account_id
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this.id
 
   config = {
-    ingress = [
-      {
-        hostname = "*.${var.zone_name}"
-        service  = var.tunnel_target_service
-      },
+    ingress = concat(
+      [
+        for hostname in local.tunnel_hostnames : {
+          hostname = hostname
+          service  = var.tunnel_target_service
+        }
+      ],
       # Required catch-all — must be last, must have no hostname.
-      {
+      [{
         service = "http_status:404"
-      },
-    ]
+      }],
+    )
   }
 }
 
@@ -41,10 +52,10 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
 }
 
 locals {
-  # authentik.<zone_name> is covered by the *.zone_name wildcard tunnel
-  # ingress above — it deliberately stays out of var.protected_hostnames,
-  # since it's the login page/IdP the Access redirect below depends on and
-  # must stay reachable without an Access session already established.
+  # authentik.<zone_name> is routed by the tunnel via local.public_hostnames
+  # and deliberately stays out of local.protected_hostnames — it's the login
+  # page/IdP the Access redirect below depends on, so it has to be reachable
+  # without an Access session already established.
   authentik_base_url = "https://authentik.${var.zone_name}"
 }
 
@@ -88,7 +99,7 @@ resource "cloudflare_zero_trust_access_policy" "allow" {
 # fails open, since the tunnel's *.zone_name ingress routes it regardless.
 locals {
   protected_hostname_chunks = {
-    for i, chunk in chunklist(var.protected_hostnames, var.access_destinations_per_app) :
+    for i, chunk in chunklist(local.protected_hostnames, var.access_destinations_per_app) :
     tostring(i) => chunk
   }
 }

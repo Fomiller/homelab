@@ -1,0 +1,33 @@
+# .github/workflows/check-ingress-exposure.yaml
+#
+# The tunnel routes only the hostnames listed in the cloudflare/global/tunnels
+# unit, so an app whose IngressRoute isn't in one of those lists gets a 404.
+# Safe, but not what anyone meant to ship. This catches it at review time.
+#
+# Reads both sides out of git, so no cluster access and no credentials.
+
+name: 'Check Ingress Exposure'
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/check-ingress-exposure.yaml'
+      - 'infra/units/cloudflare/global/tunnels/**'
+      - 'k8s/**'
+      - 'scripts/check-ingress-exposure.py'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/check-ingress-exposure.yaml'
+      - 'infra/units/cloudflare/global/tunnels/**'
+      - 'k8s/**'
+      - 'scripts/check-ingress-exposure.py'
+
+jobs:
+  check:
+    name: 'Ingress exposure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-ingress-exposure.py
