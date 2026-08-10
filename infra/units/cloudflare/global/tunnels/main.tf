@@ -76,21 +76,35 @@ resource "cloudflare_zero_trust_access_policy" "allow" {
   ]
 }
 
-# One Access application covering every hostname in var.protected_hostnames
-# — sits in front of the tunnel at Cloudflare's edge, so unauthenticated
-# requests never reach Traefik/the origin at all. `domain` is just the
-# primary/display hostname; `destinations` is what's actually enforced
-# (self_hosted_domains, the old multi-hostname field, is deprecated).
+# Access applications sit in front of the protected hostnames at Cloudflare's
+# edge, so unauthenticated requests never reach Traefik/the origin at all.
+# `domain` is just the primary/display hostname; `destinations` is what's
+# actually enforced (self_hosted_domains, the old multi-hostname field, is
+# deprecated).
+#
+# Split across several apps because one app only takes
+# var.access_destinations_per_app destinations. Going over doesn't partially
+# apply — the whole request fails and the hostname stays unprotected, which
+# fails open, since the tunnel's *.zone_name ingress routes it regardless.
+locals {
+  protected_hostname_chunks = {
+    for i, chunk in chunklist(var.protected_hostnames, var.access_destinations_per_app) :
+    tostring(i) => chunk
+  }
+}
+
 resource "cloudflare_zero_trust_access_application" "protected" {
+  for_each = local.protected_hostname_chunks
+
   account_id       = var.cloudflare_account_id
-  name             = "Homelab Admin Apps"
-  domain           = var.protected_hostnames[0]
+  name             = "Homelab Admin Apps ${tonumber(each.key) + 1}"
+  domain           = each.value[0]
   type             = "self_hosted"
   session_duration = "168h"
-  allowed_idps = cloudflare_zero_trust_access_identity_provider.authentik[*].id
+  allowed_idps     = cloudflare_zero_trust_access_identity_provider.authentik[*].id
 
   destinations = [
-    for hostname in var.protected_hostnames : {
+    for hostname in each.value : {
       type = "public"
       uri  = hostname
     }
