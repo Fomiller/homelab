@@ -6,3 +6,5 @@ variable "s3_bucket_name_loki_ruler" { type = string }
 variable "s3_bucket_name_loki_admin" { type = string }
 variable "iam_role_name_attic" { type = string }
 variable "s3_bucket_name_attic" { type = string }
+variable "iam_role_name_cnpg_backup" { type = string }
+variable "s3_bucket_name_cnpg_backups" { type = string }

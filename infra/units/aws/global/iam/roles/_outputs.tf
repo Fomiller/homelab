@@ -13,3 +13,7 @@ output "iam_role_name_loki" {
 output "iam_role_name_attic" {
   value = aws_iam_role.attic_irsa.name
 }
+
+output "iam_role_name_cnpg_backup" {
+  value = aws_iam_role.cnpg_backup_irsa.name
+}
