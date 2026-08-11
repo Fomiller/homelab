@@ -4,9 +4,9 @@ clean:
     find . -name ".terraform" -type d | xargs -r rm -rv
     find . -name ".terragrunt-cache" -type d | xargs -r rm -rv
 
-login env:
-    doppler run \
-    -- assume-role login -p {{env}}Terraform
+# One session covers all three accounts. Pick the account with AWS_PROFILE.
+login:
+    aws sso login --sso-session fomiller
 
 init dir:
     doppler run \
