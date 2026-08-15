@@ -27,6 +27,17 @@ api:
   oidc:
     enabled: false
 
+  # Argo Rollouts isn't installed on this cluster. Leaving this on ships RBAC
+  # for a feature that can't work, including verbs: ["*"] on
+  # (cluster)analysistemplates. Chart docs recommend disabling explicitly.
+  rollouts:
+    integrationEnabled: false
+
+controller:
+  # Same reasoning as api.rollouts above.
+  rollouts:
+    integrationEnabled: false
+
 dex:
   enabled: false
 

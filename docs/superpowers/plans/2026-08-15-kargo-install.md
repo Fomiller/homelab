@@ -573,7 +573,7 @@ echo "exit=$?"
 grep '^kind:' /tmp/kargo-render.yaml | sort | uniq -c | sort -rn | head
 ```
 
-Deleting `charts/` first proves the build works from a cold pull, the way Argo CD's repo-server will do it. Expected: `exit=0`, and the kind summary includes 9 CRDs, 4 Namespaces (the chart's three plus ours), 2 ExternalSecrets, 1 IngressRoute, and 3 Deployments — api, controller, management-controller.
+Deleting `charts/` first proves the build works from a cold pull, the way Argo CD's repo-server will do it. Expected: `exit=0`, and the kind summary includes 9 CRDs, 4 Namespaces (the chart's three plus ours), 2 ExternalSecrets, 1 IngressRoute, and 4 Deployments — api, controller, management-controller, and webhooks-server.
 
 - [ ] **Step 5: Make sure the pulled chart is not about to be committed**
 

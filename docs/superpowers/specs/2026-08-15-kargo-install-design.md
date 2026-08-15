@@ -120,6 +120,27 @@ that keeps `attic.fomiller.com` in `public_hostnames`. CLI access means
 `kubectl port-forward` to `kargo-api`, or minting an Access service token. Acceptable
 while the UI is the only consumer.
 
+## RBAC
+
+The hostname exposure above is the smaller surface. The chart's in-cluster RBAC is bigger
+and isn't something this install can trim.
+
+`kargo-management-controller` gets cluster-wide `verbs: ["*"]` on core `secrets`,
+`configmaps`, and `serviceaccounts`, and on `clusterroles`, `clusterrolebindings`, `roles`,
+and `rolebindings`. That combination is cluster-admin-equivalent — it can bind itself to
+`cluster-admin`. `kargo-webhooks-server` gets the same cluster-wide `["*"]` on core
+`secrets`, `configmaps`, `serviceaccounts`, plus `["*"]` on namespaced `roles` and
+`rolebindings`.
+
+This is inherent to how Kargo provisions per-project namespaces, not a config mistake.
+Accepted, not fixed.
+
+One mitigating detail: the webhooks that intercept core `secrets` and `configmaps` are
+scoped tight, with a `namespaceSelector` requiring the `kargo.akuity.io/project` label and
+an `objectSelector` requiring `kargo.akuity.io/replicated-from`. No Kargo Projects exist
+yet, so they never fire — a down webhook server can't block unrelated API writes. Every
+`failurePolicy: Fail` webhook applies only to `kargo.akuity.io` resources.
+
 ## Secrets
 
 Follows `k8s/apps/attic/external-secrets.yaml` exactly. Three objects in
@@ -140,9 +161,12 @@ The two keys, which must be set in Doppler by hand before the app will start:
 
 Rotating the signing key invalidates every issued Kargo token.
 
-Ordering is not a problem worth designing around. The API Deployment mounts the Secret, so
-if external-secrets hasn't produced it yet the pod stays pending and starts on its own once
-it appears.
+Ordering is not a problem worth designing around, but the failure isn't silent. The chart
+wires the Secret in with `envFrom.secretRef` and no `optional: true`, so if
+external-secrets hasn't produced it yet the container fails with
+`CreateContainerConfigError` and the Deployment never goes Available. Argo CD reports the
+app Degraded until the Secret shows up, at which point the pod starts on its own with no
+further action needed.
 
 ## Ingress
 
