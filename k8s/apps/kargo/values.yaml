@@ -1,0 +1,36 @@
+api:
+  host: kargo.fomiller.com
+
+  # Cloudflare terminates TLS at the edge and the tunnel hands Traefik plain
+  # HTTP, so the API server listens for HTTP. terminatedUpstream is separate:
+  # it forces the URLs Kargo generates for itself — the token issuer, the base
+  # URL — to https, which is what the browser is actually on.
+  tls:
+    enabled: false
+    terminatedUpstream: true
+
+  # Routing is a Traefik IngressRoute, see ingressroute.yaml.
+  ingress:
+    enabled: false
+
+  # Points at the Secret external-secrets builds. Setting this stops the chart
+  # templating its own Secret out of values, which is what keeps the password
+  # hash out of git.
+  secret:
+    name: kargo-api
+
+  adminAccount:
+    enabled: true
+
+  # Cloudflare Access is the gate. Kargo's own login is the admin account
+  # behind it.
+  oidc:
+    enabled: false
+
+dex:
+  enabled: false
+
+# Nothing pushes git events at Kargo until a Warehouse wants them, and turning
+# this on means giving it a hostname and an exposure decision.
+externalWebhooksServer:
+  enabled: false
