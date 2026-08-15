@@ -24,6 +24,7 @@ locals {
     "romm.fomiller.com",
     "supabase.fomiller.com",
     "wiki.fomiller.com",
+    "kargo.fomiller.com",
   ]
 
   # Reachable without an Access session. Both are deliberate and neither can
