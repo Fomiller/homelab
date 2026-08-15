@@ -6,6 +6,7 @@ namespace: kargo
 resources:
 - namespace.yaml
 - external-secrets.yaml
+- ingressroute.yaml
 
 # The chart is published to OCI only — there's no HTTP repo index. kustomize
 # handles the oci:// scheme itself; `helm pull --repo oci://...` does not.
