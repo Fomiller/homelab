@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: services
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: PruneLast=true
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  description: Micro-services deployed from their own repos
+  # Narrower than the homelab project on purpose. These applications point at
+  # repos outside this one, so the blast radius of a bad one should not be the
+  # whole cluster.
+  sourceRepos:
+    - https://github.com/Fomiller/*
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: services
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  goTemplate: true
+  goTemplateOptions: [missingkey=error]
+
+  generators:
+    # One entry per service per environment. Adding a service is a PR here.
+    # A git-files or scmProvider generator could find them on their own, but
+    # scmProvider needs the repos in an org and git-files needs a file tree
+    # for what is currently a handful of lines.
+    #
+    # - service: my-service
+    #   env: dev
+    #   repoURL: https://github.com/Fomiller/my-service.git
+    #   targetRevision: main
+    #   namespace: my-service
+    - list:
+        elements: []
+
+  template:
+    metadata:
+      name: '{{ .service }}-{{ .env }}'
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: '{{ .service }}'
+        flake-hub.fomiller.dev/env: '{{ .env }}'
+    spec:
+      project: services
+      source:
+        repoURL: '{{ .repoURL }}'
+        targetRevision: '{{ .targetRevision }}'
+        path: 'argocd/overlays/{{ .env }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
+  # Deleting an entry should take the workloads with it, not leave them
+  # running in the cluster with nothing tracking them.
+  syncPolicy:
+    preserveResourcesOnDeletion: false
