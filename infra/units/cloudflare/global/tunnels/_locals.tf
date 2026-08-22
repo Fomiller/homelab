@@ -25,6 +25,7 @@ locals {
     "supabase.fomiller.com",
     "wiki.fomiller.com",
     "kargo.fomiller.com",
+    "cms.fomiller.com",
   ]
 
   # Reachable without an Access session. Both are deliberate and neither can
