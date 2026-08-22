@@ -135,3 +135,27 @@ resource "aws_s3_bucket_public_access_block" "cnpg_backups" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# Files uploaded through the Directus admin app. Directus tracks every file
+# in its own database, so nothing here may expire on its own — a lifecycle
+# rule would leave the CMS serving 404s for assets it still lists.
+resource "aws_s3_bucket" "directus_uploads" {
+  bucket = "${var.namespace}-${var.environment}-${var.app_prefix}-directus-uploads"
+
+  tags = {
+    Owner       = "Forrest Miller"
+    Email       = "forrestmillerj@gmail.com"
+    Environment = var.environment
+  }
+}
+
+# Assets are served through Directus, which checks permissions per file,
+# rather than straight from the bucket.
+resource "aws_s3_bucket_public_access_block" "directus_uploads" {
+  bucket = aws_s3_bucket.directus_uploads.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

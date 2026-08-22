@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: directus
+
+resources:
+- namespace.yaml
+- external-secrets.yaml
+- objectstore.yaml
+- postgres.yaml
+- scheduledbackup.yaml
+- ingressroute.yaml
+
+# Release name "directus" matches the chart name, so every rendered resource
+# is named plain "directus" — that's the Service name ingressroute.yaml and
+# the IRSA trust policy both depend on.
+helmCharts:
+- name: directus
+  repo: https://directus-labs.github.io/helm-chart/
+  releaseName: directus
+  version: 2.1.0
+  namespace: directus
+  valuesFile: values.yaml
+
+# The chart's `helm test` Pod. Kustomize renders hook resources like any
+# other, so Argo would sync a one-shot wget Pod into the namespace.
+patches:
+- target:
+    kind: Pod
+    name: directus-test-connection
+  patch: |
+    $patch: delete
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: directus-test-connection
