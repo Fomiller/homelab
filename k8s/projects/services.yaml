@@ -36,18 +36,25 @@ spec:
   goTemplateOptions: [missingkey=error]
 
   generators:
-    # One entry per service per environment. Adding a service is a PR here.
-    # A git-files or scmProvider generator could find them on their own, but
-    # scmProvider needs the repos in an org and git-files needs a file tree
-    # for what is currently a handful of lines.
+    # One file per service per environment under k8s/services/. Adding a
+    # service is a new file, not an edit to a list of every service. Same
+    # generator the homelab ApplicationSet uses for k8s/apps/**/config.json.
     #
-    # - service: my-service
-    #   env: dev
-    #   repoURL: https://github.com/Fomiller/my-service.git
-    #   targetRevision: main
-    #   namespace: my-service
-    - list:
-        elements: []
+    # Each file supplies service, env, repoURL, targetRevision and namespace.
+    # See k8s/services/README.md.
+    #
+    # Rejected: the scmProvider generator, which would need no registry file at
+    # all — point it at the account and filter on pathsExist. Argo CD's GitHub
+    # implementation calls Repositories.ListByOrg with no fallback to
+    # ListByUser, and Fomiller is a personal account, so the call 404s and the
+    # generator finds nothing. Worth revisiting only if the account ever
+    # becomes an organisation.
+    - git:
+        repoURL: https://github.com/Fomiller/homelab.git
+        revision: main
+        requeueAfterSeconds: 20
+        files:
+          - path: k8s/services/*/config.json
 
   template:
     metadata:
