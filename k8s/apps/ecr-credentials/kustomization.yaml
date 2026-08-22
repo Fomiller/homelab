@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Deliberately no `namespace:`. Every other app here pins one, but these
+# objects span namespaces: the generator is cluster-scoped, the repo-creds
+# ExternalSecret belongs to argocd, and the ClusterExternalSecret writes into
+# whichever namespaces carry the label. A namespace transformer would move the
+# argocd one somewhere Argo CD never reads.
+resources:
+- ecr.yaml
