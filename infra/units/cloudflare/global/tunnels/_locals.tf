@@ -38,9 +38,16 @@ locals {
   #   auth is the control — an unauthenticated request gets a 401 from Attic.
   #
   # Adding to this list puts something on the public internet.
+  #
+  # - blog is the first entry that is public because being public is the
+  #   point, rather than because Access cannot sit in front of it. It serves
+  #   published content only, holds no session, and has no admin surface — the
+  #   CMS stays at cms.fomiller.com behind Access, and the blog reads it over
+  #   the in-cluster Service.
   public_hostnames = [
     "authentik.fomiller.com",
     "attic.fomiller.com",
+    "blog.fomiller.com",
   ]
 
   tunnel_hostnames = concat(local.protected_hostnames, local.public_hostnames)
