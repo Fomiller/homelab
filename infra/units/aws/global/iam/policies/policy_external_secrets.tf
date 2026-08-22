@@ -42,6 +42,31 @@ data "aws_iam_policy_document" "external_secrets" {
       "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:*"
     ]
   }
+  # ECR, for the ECRAuthorizationToken generator. The generator mints a
+  # registry token, but ECR authorizes the pull against the identity that
+  # asked for it — this role — so read on the repositories has to be here too,
+  # not only GetAuthorizationToken.
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:ListImages"
+    ]
+
+    resources = [
+      "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "external_secrets" {

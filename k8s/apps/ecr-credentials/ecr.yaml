@@ -1,0 +1,115 @@
+---
+# ECR authorization tokens expire every 12 hours, so a static Secret in
+# Secrets Manager is not an option — this has to be minted on a schedule.
+#
+# ClusterGenerator rather than a namespaced ECRAuthorizationToken: the token is
+# needed in argocd (to pull the OCI chart) and in every service namespace (to
+# pull the image). A namespaced generator would mean a copy of this object per
+# namespace, forever.
+#
+# Auth is IRSA, the same web identity the aws-clustersecretstore uses. The role
+# needs ECR read as well as GetAuthorizationToken — ECR authorizes the pull
+# against the identity that minted the token. See
+# infra/units/aws/global/iam/policies/policy_external_secrets.tf.
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: ClusterGenerator
+metadata:
+  name: ecr-fomiller
+spec:
+  kind: ECRAuthorizationToken
+  generator:
+    ecrAuthorizationTokenSpec:
+      region: us-east-1
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: external-secrets
+            namespace: external-secrets
+---
+# Argo CD's repo-server pulls the service chart from ECR over OCI. Without
+# this it has no credentials for the registry and the Application fails to
+# render before it ever reaches the cluster.
+#
+# `argocd.argoproj.io/secret-type: repo-creds` is what makes Argo CD read the
+# Secret at all, and `url` is matched as a prefix — so this one entry covers
+# every chart under the registry, not just the blog's.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: ecr-argocd-repo-creds
+  namespace: argocd
+spec:
+  # Well under the 12 hour token lifetime. A repo-server that starts a pull
+  # with a token minted 11 hours ago should still finish it.
+  refreshInterval: 1h
+  target:
+    name: ecr-argocd-repo-creds
+    creationPolicy: Owner
+    template:
+      engine: v2
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repo-creds
+        annotations:
+          expiresAt: "{{ .expires_at }}"
+      data:
+        url: oci://695434033664.dkr.ecr.us-east-1.amazonaws.com
+        type: helm
+        enableOCI: "true"
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ClusterGenerator
+          name: ecr-fomiller
+---
+# The kubelet's turn: Argo CD renders the chart, then nodes have to pull the
+# image. That credential is per-namespace, and every service gets its own
+# namespace, so a plain ExternalSecret would be one more file per service.
+#
+# ClusterExternalSecret writes the ExternalSecret into every namespace that
+# carries the label instead. The services ApplicationSet stamps that label on
+# the namespaces it creates, so a new service needs nothing here.
+apiVersion: external-secrets.io/v1
+kind: ClusterExternalSecret
+metadata:
+  name: ecr-image-pull
+spec:
+  externalSecretName: ecr-image-pull
+  namespaceSelectors:
+    - matchLabels:
+        fomiller.dev/ecr-pull: "true"
+  refreshTime: 1h
+  externalSecretSpec:
+    refreshInterval: 1h
+    target:
+      name: ecr-image-pull
+      creationPolicy: Owner
+      template:
+        engine: v2
+        type: kubernetes.io/dockerconfigjson
+        metadata:
+          annotations:
+            expiresAt: "{{ .expires_at }}"
+        data:
+          # proxy_endpoint comes back with an https:// scheme; a docker config
+          # key must be the bare host, and a pull silently misses this entry
+          # if the scheme is left on.
+          .dockerconfigjson: |
+            {
+              "auths": {
+                "{{ .proxy_endpoint | replace "https://" "" }}": {
+                  "username": "{{ .username }}",
+                  "password": "{{ .password }}",
+                  "auth": "{{ printf "%s:%s" .username .password | b64enc }}"
+                }
+              }
+            }
+    dataFrom:
+      - sourceRef:
+          generatorRef:
+            apiVersion: generators.external-secrets.io/v1alpha1
+            kind: ClusterGenerator
+            name: ecr-fomiller

@@ -71,6 +71,13 @@ spec:
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+        # CreateNamespace=true alone makes a bare namespace. The label is what
+        # the ecr-image-pull ClusterExternalSecret selects on, so without it a
+        # new service's pods have no registry credential and sit in
+        # ImagePullBackOff.
+        managedNamespaceMetadata:
+          labels:
+            fomiller.dev/ecr-pull: "true"
 
   # Deleting an entry should take the workloads with it, not leave them
   # running in the cluster with nothing tracking them.
