@@ -71,23 +71,26 @@ resources:
   limits:
     memory: 1Gi
 
+# /server/ping, not /server/health — health needs an admin token and answers
+# 403 to an unauthenticated probe, which never lets the pod go ready.
+#
 # Directus runs migrations on boot, which the default 3-failure liveness
 # window can cut short on a cold start. The startup probe holds the other
 # two off until the HTTP server answers.
 startupProbe:
   enabled: true
   httpGet:
-    path: /server/health
+    path: /server/ping
     port: http
   failureThreshold: 30
   periodSeconds: 10
 livenessProbe:
   enabled: true
   httpGet:
-    path: /server/health
+    path: /server/ping
     port: http
 readinessProbe:
   enabled: true
   httpGet:
-    path: /server/health
+    path: /server/ping
     port: http
