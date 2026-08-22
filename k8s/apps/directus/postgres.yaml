@@ -1,0 +1,57 @@
+# Directus keeps everything in Postgres — collections, field definitions,
+# users, and the blog content itself. The S3 bucket only holds uploaded
+# files, so this database is the part that has to survive.
+#
+# CNPG generates the directus-db-cnpg-app Secret (username/password/host/
+# dbname). values.yaml points the chart at it, and the chart reads the
+# `password` key from it directly.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: directus-db-cnpg
+  namespace: directus
+spec:
+  # Single instance, same trade as attic-db-cnpg: a replica buys failover,
+  # and the recovery story here is the barman-cloud backups below.
+  instances: 1
+
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: directus-db-backup
+
+  # IRSA for the backup sidecar. CNPG names the ServiceAccount after the
+  # cluster, so the role's trust policy pins sub to
+  # system:serviceaccount:directus:directus-db-cnpg — renaming the cluster
+  # breaks it.
+  serviceAccountTemplate:
+    metadata:
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerCnpgBackupS3Access
+
+  # Pinned rather than left to the operator's default, which moves with the
+  # chart version. CNPG refuses an implicit major-version jump, so an
+  # unpinned image turns a routine chart bump into a stuck cluster.
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+
+  bootstrap:
+    initdb:
+      database: directus
+      owner: directus
+
+  # Text and metadata only — uploads go to S3. Longhorn can grow a volume
+  # but not shrink one, so this starts small.
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+
+  monitoring:
+    enablePodMonitor: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi

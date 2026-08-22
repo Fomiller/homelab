@@ -1,0 +1,11 @@
+{
+  "appName": "directus",
+  "userGivenName": "directus",
+  "destNamespace": "directus",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/directus",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}

@@ -1,0 +1,93 @@
+# Fronted by our own Traefik IngressRoute (ingressroute.yaml), so the
+# chart's ingress stays off. That also drops the chart's PUBLIC_URL, which
+# it only sets when ingress is enabled — extraEnvVars sets it below.
+ingress:
+  enabled: false
+
+# Chart default is mysql. Postgres here so the database is a CNPG cluster
+# like attic's, with WAL archiving to S3.
+databaseEngine: postgresql
+
+# Both bundled database subcharts stay off. They ship bitnamilegacy images
+# and no backup path; postgres.yaml owns the database instead.
+mysql:
+  enableInstallation: false
+postgresql:
+  enableInstallation: false
+  # CNPG's generated Secret for the app role. Its `password` key is exactly
+  # what the chart's deployment reads, so no copying between secrets.
+  auth:
+    existingSecret: directus-db-cnpg-app
+    database: directus
+    username: directus
+  # Chart builds DB_HOST from this. The read-write Service CNPG creates for
+  # the cluster — directus-db-cnpg-ro exists too, but Directus writes.
+  postgresqlURL: directus-db-cnpg-rw.directus.svc.cluster.local
+createMysqlSecret: false
+createPostgresqlSecret: false
+
+# Single replica, so there is no second pod to share a cache with. Redis
+# would only add a bitnamilegacy StatefulSet to back up.
+redis:
+  enabled: false
+
+# ADMIN_PASSWORD, KEY, and SECRET come from AWS Secrets Manager through
+# external-secrets.yaml, not from a chart-generated random value that would
+# roll on every helm template.
+createApplicationSecret: false
+applicationSecretName: directus-application-secret
+
+adminEmail: forrestmillerj@gmail.com
+
+# Uploads go to S3, so the pod stays stateless — no PVC, and files are
+# offsite by default. Credentials are IRSA: with STORAGE_S3_KEY/SECRET
+# unset, the AWS SDK falls back to the web identity token that the
+# pod-identity webhook injects for the annotated ServiceAccount below.
+extraEnvVars:
+  - name: PUBLIC_URL
+    value: https://cms.fomiller.com
+  - name: STORAGE_LOCATIONS
+    value: s3
+  - name: STORAGE_S3_DRIVER
+    value: s3
+  - name: STORAGE_S3_BUCKET
+    value: fomiller-dev-homelab-directus-uploads
+  - name: STORAGE_S3_REGION
+    value: us-east-1
+
+# The role's trust policy pins sub to
+# system:serviceaccount:directus:directus (infra/units/aws/global/iam
+# /roles), and the chart names this ServiceAccount after the release, so
+# renaming the release breaks the AssumeRoleWithWebIdentity call.
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::695434033664:role/FomillerDirectusS3Access
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+
+# Directus runs migrations on boot, which the default 3-failure liveness
+# window can cut short on a cold start. The startup probe holds the other
+# two off until the HTTP server answers.
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /server/health
+    port: http
+  failureThreshold: 30
+  periodSeconds: 10
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /server/health
+    port: http
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /server/health
+    port: http

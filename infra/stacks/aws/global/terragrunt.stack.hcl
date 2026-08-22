@@ -72,6 +72,7 @@ unit "iam_policies" {
         iam_role_name_loki             = "FomillerLokiS3Access"
         iam_role_name_attic            = "FomillerAtticS3Access"
         iam_role_name_cnpg_backup      = "FomillerCnpgBackupS3Access"
+        iam_role_name_directus         = "FomillerDirectusS3Access"
       }
     }
     dependency "s3" {
@@ -84,6 +85,7 @@ unit "iam_policies" {
         s3_bucket_name_loki_admin  = "fomiller-MOCK-homelab-loki-admin"
         s3_bucket_name_attic        = "fomiller-MOCK-homelab-attic"
         s3_bucket_name_cnpg_backups = "fomiller-MOCK-homelab-cnpg-backups"
+        s3_bucket_name_directus_uploads = "fomiller-MOCK-homelab-directus-uploads"
       }
     }
     inputs = {
@@ -97,6 +99,8 @@ unit "iam_policies" {
       s3_bucket_name_attic           = dependency.s3.outputs.s3_bucket_name_attic
       iam_role_name_cnpg_backup      = dependency.roles.outputs.iam_role_name_cnpg_backup
       s3_bucket_name_cnpg_backups    = dependency.s3.outputs.s3_bucket_name_cnpg_backups
+      iam_role_name_directus         = dependency.roles.outputs.iam_role_name_directus
+      s3_bucket_name_directus_uploads = dependency.s3.outputs.s3_bucket_name_directus_uploads
     }
   }
 }

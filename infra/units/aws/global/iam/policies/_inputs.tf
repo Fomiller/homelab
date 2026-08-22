@@ -8,3 +8,5 @@ variable "iam_role_name_attic" { type = string }
 variable "s3_bucket_name_attic" { type = string }
 variable "iam_role_name_cnpg_backup" { type = string }
 variable "s3_bucket_name_cnpg_backups" { type = string }
+variable "iam_role_name_directus" { type = string }
+variable "s3_bucket_name_directus_uploads" { type = string }

@@ -85,9 +85,32 @@ resource "aws_iam_role" "loki_irsa" {
   })
 }
 
-# Assumed by the barman-cloud sidecar in the CNPG instance pods. CNPG names
-# the ServiceAccount after the cluster, so the sub below is tied to the
-# attic-db-cnpg cluster specifically — renaming that cluster breaks this.
+resource "aws_iam_role" "directus_irsa" {
+  name               = "${title(var.namespace)}DirectusS3Access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:aud": "sts.amazonaws.com",
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": "system:serviceaccount:directus:directus"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Shared by every CNPG cluster's barman-cloud sidecar — one entry per
+# cluster. CNPG names the ServiceAccount after the cluster, so renaming a
+# cluster breaks its backups until the sub below follows.
 resource "aws_iam_role" "cnpg_backup_irsa" {
   name               = "${title(var.namespace)}CnpgBackupS3Access"
   assume_role_policy = jsonencode({
@@ -103,7 +126,10 @@ resource "aws_iam_role" "cnpg_backup_irsa" {
         Condition = {
           StringEquals = {
             "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:aud": "sts.amazonaws.com",
-            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": "system:serviceaccount:attic:attic-db-cnpg"
+            "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": [
+              "system:serviceaccount:attic:attic-db-cnpg",
+              "system:serviceaccount:directus:directus-db-cnpg",
+            ]
           }
         }
       }

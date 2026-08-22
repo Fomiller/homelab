@@ -13,6 +13,11 @@ resource "aws_iam_role_policy_attachment" "cnpg_backup_attachment" {
   role       = var.iam_role_name_cnpg_backup
 }
 
+resource "aws_iam_role_policy_attachment" "directus_attachment" {
+  policy_arn = aws_iam_policy.directus_s3.arn
+  role       = var.iam_role_name_directus
+}
+
 resource "aws_iam_role_policy_attachment" "loki_attachment" {
   policy_arn = aws_iam_policy.loki_s3.arn
   role       = var.iam_role_name_loki

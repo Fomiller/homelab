@@ -17,3 +17,7 @@ output "iam_role_name_attic" {
 output "iam_role_name_cnpg_backup" {
   value = aws_iam_role.cnpg_backup_irsa.name
 }
+
+output "iam_role_name_directus" {
+  value = aws_iam_role.directus_irsa.name
+}

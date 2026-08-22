@@ -25,3 +25,7 @@ output "s3_bucket_name_attic" {
 output "s3_bucket_name_cnpg_backups" {
   value = aws_s3_bucket.cnpg_backups.id
 }
+
+output "s3_bucket_name_directus_uploads" {
+  value = aws_s3_bucket.directus_uploads.id
+}

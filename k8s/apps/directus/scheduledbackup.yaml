@@ -1,0 +1,20 @@
+# Nightly base backup. WAL is archived continuously by the plugin, so this
+# only bounds how much WAL a restore has to replay, not how much data is
+# recoverable.
+#
+# The schedule is a 6-field cron — CNPG includes seconds, unlike Kubernetes
+# CronJob. This is 03:00 daily, offset from attic's 02:30 so the two
+# clusters don't upload at the same time.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: directus-db-cnpg-nightly
+  namespace: directus
+spec:
+  schedule: "0 0 3 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: directus-db-cnpg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
