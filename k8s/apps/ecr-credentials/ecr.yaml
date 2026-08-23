@@ -172,6 +172,49 @@ spec:
     - extract:
         key: ecr-token
 ---
+# The same token again, in a third shape. The Secret above covers a native Helm
+# source; this one covers a kustomize overlay.
+#
+# `kustomize build --enable-helm` runs the helm binary as a subprocess, and helm
+# reads its registry credentials from a docker-format file named by
+# HELM_REGISTRY_CONFIG. Argo CD's repo-creds Secret is invisible to it, so an
+# overlay that inflates a private chart fails with "unauthorized" until this
+# file exists. See k8s/bootstrap/argo-cd/repo-server.patch.yaml.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: ecr-helm-registry-config
+  namespace: argocd
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: ecr-token-clustersecretstore
+  target:
+    name: ecr-helm-registry-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      metadata:
+        annotations:
+          expiresAt: "{{ .expires_at }}"
+      data:
+        # Same shape as the image pull Secret below, and the same
+        # scheme-stripping rule: helm looks the host up by bare name.
+        config.json: |
+          {
+            "auths": {
+              "{{ .proxy_endpoint | replace "https://" "" }}": {
+                "username": "{{ .username }}",
+                "password": "{{ .password }}",
+                "auth": "{{ printf "%s:%s" .username .password | b64enc }}"
+              }
+            }
+          }
+  dataFrom:
+    - extract:
+        key: ecr-token
+---
 # The kubelet's turn: Argo CD renders the chart, then nodes have to pull the
 # image. That credential is per-namespace, and every service gets its own
 # namespace, so a plain ExternalSecret would be one more file per service.

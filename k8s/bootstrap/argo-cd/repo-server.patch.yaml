@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  template:
+    spec:
+      containers:
+        - name: argocd-repo-server
+          env:
+            # `kustomize build --enable-helm` shells out to the helm binary,
+            # which reads its own registry config and never sees the repo-creds
+            # Secret Argo CD keeps for native Helm sources. Pointing it at the
+            # minted ECR token is what lets an overlay inflate a private chart.
+            - name: HELM_REGISTRY_CONFIG
+              value: /helm-registry/config.json
+          volumeMounts:
+            - name: ecr-helm-registry-config
+              mountPath: /helm-registry
+              readOnly: true
+      volumes:
+        - name: ecr-helm-registry-config
+          secret:
+            # Written hourly by external-secrets, well inside the 12 hour token
+            # lifetime. The kubelet refreshes a mounted Secret in place, so a
+            # rotation reaches helm without restarting the pod.
+            secretName: ecr-helm-registry-config

@@ -20,7 +20,10 @@ configMapGenerator:
       usernameSecret:
         key: git_username
         name: autopilot-secret
-  - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone"
+  # --enable-helm lets an overlay inflate a chart with `helmCharts:`. That runs
+  # the helm binary, which needs its own registry credential — see
+  # repo-server.patch.yaml.
+  - kustomize.buildOptions="--enable-alpha-plugins --enable-exec --load-restrictor=LoadRestrictionsNone --enable-helm"
 - name: argocd-cmd-params-cm
   behavior: merge
   literals:
@@ -31,6 +34,10 @@ patches:
     target:
       kind: Service
       name: argocd-server
+  - path: repo-server.patch.yaml
+    target:
+      kind: Deployment
+      name: argocd-repo-server
   - path: applicationsets-crd.patch.yaml
     target:
       version: v1
