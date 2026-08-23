@@ -1,7 +1,7 @@
 {
   "appName": "kargo-blog-creds",
   "userGivenName": "kargo-blog-creds",
-  "destNamespace": "blog-delivery",
+  "destNamespace": "blog",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "k8s/apps/kargo-blog-creds",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",
