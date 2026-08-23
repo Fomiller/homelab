@@ -1,76 +1,64 @@
 # services
 
-One directory per service per environment. Each holds a single `config.yaml`,
-and that file existing is what creates the Argo CD Application — the `services`
-ApplicationSet in `k8s/projects/services.yaml` globs `k8s/services/*/config.yaml`.
+**This directory is on its way out.** The `services` ApplicationSet no longer
+reads it. Its files stay only until the last service listed here has moved to
+the shape below, and then the directory goes.
 
-Nothing else registers a service. There is no list to add to.
+## How a service is registered now
 
-## config.yaml
+Two things, and neither of them is a file here:
+
+1. The service repo has `argocd.yaml` at its root. golden-argocd generates and
+   manages it, so it is already there.
+2. `k8s/projects/services.yaml` lists the repo's URL.
+
+The ApplicationSet is a matrix: the list of repo URLs, then a git generator
+that reads `argocd.yaml` out of each of those repos.
 
 ```yaml
-service: blog
+# argocd.yaml, in the service's repo
+name: blog
 env: prod
-repoURL: https://github.com/Fomiller/blog.git
-targetRevision: main
-registry: 695434033664.dkr.ecr.us-east-1.amazonaws.com
-chartVersion: 0.3.0
-imageTag: 310133c@sha256:...
 namespace: blog
+notifications: ""
 ```
 
-YAML rather than JSON because Kargo rewrites this file on every promotion and
-its `yaml-update` step emits YAML. A `.json` file would come back out of a
-promotion as YAML.
+```yaml
+# k8s/projects/services.yaml
+- list:
+    elements:
+      - repoURL: https://github.com/Fomiller/blog.git
+        targetRevision: main
+```
 
-Every key is required. The ApplicationSet runs with `missingkey=error`, so a
-missing one fails the generator rather than rendering an Application with an
-empty field.
+The generator runs with `missingkey=error`, so a field missing from
+`argocd.yaml` fails the generator rather than rendering an Application with an
+empty destination.
 
-| Key | What it does |
-| --- | --- |
-| `service` | Names the Application, together with `env`. Also names the chart: `<service>-chart`. |
-| `env` | Picks the overlay values file: `argocd/overlays/<env>/values.app.yaml` from the service's own repo. |
-| `repoURL` | The service's repo, not this one. Supplies the values files, and nothing else. |
-| `targetRevision` | Branch or tag the values are read from. |
-| `registry` | OCI registry holding the chart. Must appear in the `services` AppProject `sourceRepos`. |
-| `chartVersion` | Chart version to run. Written by Kargo. |
-| `imageTag` | Image to run, as `tag@digest`. Written by Kargo, and passed as a Helm parameter so it beats the tag in the service's own overlay. |
-| `namespace` | Created by Argo CD if absent, and labelled for the ECR pull secret. |
+## Why the facts moved to the service repo
 
-`chartVersion` and `imageTag` are **the deployed versions**. Kargo owns both —
-see `k8s/kargo/` and the service repo's `kargo/values.yaml`. Editing them by
-hand works and is the way to roll back, but Kargo will move them forward again
-on the next freight.
+A service's name, environment and namespace are the service's own. Keeping
+homelab's copy of them meant two files to change for one rename, and nothing
+that made them agree.
 
-Directory names are not read. Name them `<service>-<env>` so two environments
-of one service do not collide.
+The deployed versions moved for a stronger reason. `chartVersion` and
+`imageTag` used to live in this directory, written by Kargo. They now live in
+the service's own `argocd/overlays/<env>/`: the image tag in `values.app.yaml`,
+the chart version in `kustomization.yaml`. A promotion is a commit to the repo
+that built the thing, so what is running is readable next to the code.
 
-## Why two sources
+## One Application, not two
 
-The Application pulls the chart straight from ECR and reads its values from the
-service's repo. It does not render the repo's kustomize overlay.
+The overlay is a kustomization inflating two charts from ECR: the service's
+own, and `kargo-project-chart`. The workload and the pipeline that promotes it
+arrive together, so `k8s/kargo/` has nothing left to do either.
 
-That is not a style choice. Argo CD cannot pull a private OCI chart through
-kustomize's `helmCharts`: it hands the kustomize helm invocation a fresh empty
-`HELM_CONFIG_HOME` and never writes registry credentials into it, so the pull
-fails with `basic credential not found` no matter how the repository Secret is
-declared. A native Helm source with the same credential works.
-
-The consequence worth knowing: anything that used to sit in the overlay
-directory as a plain manifest is no longer rendered. It belongs in the chart.
-The Traefik route is the example — see `ingressRoute.host` in the chart's
-values.
-
-## Why the files live here and not in the service repo
-
-The generator has to read them from a repo Argo CD already watches, and it
-watches this one. A service repo carries its own chart and values; this file is
-the cluster's decision to run that service at that version, which belongs with
-the cluster.
+Argo CD could not do this before. kustomize shells out to the helm binary,
+which never saw Argo CD's registry credentials. It has its own now — see
+`k8s/apps/cluster-resources`.
 
 ## Removing a service
 
-Delete its directory. `preserveResourcesOnDeletion: false` on the
-ApplicationSet means the workloads go with it, rather than being left running
-with nothing tracking them.
+Delete its line from `k8s/projects/services.yaml`.
+`preserveResourcesOnDeletion: false` means the workloads go with it, rather
+than being left running with nothing tracking them.

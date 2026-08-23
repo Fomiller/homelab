@@ -13,8 +13,6 @@ spec:
   # whole cluster.
   sourceRepos:
     - https://github.com/Fomiller/*
-    # The chart itself comes from ECR, not from the repo. Argo CD checks every
-    # source against this list before it tries to pull.
     - 695434033664.dkr.ecr.us-east-1.amazonaws.com
   destinations:
     - namespace: '*'
@@ -25,6 +23,12 @@ spec:
   clusterResourceWhitelist:
     - group: ''
       kind: Namespace
+    # A service's overlay inflates its Kargo project chart alongside its own,
+    # so one Application creates the workload and the pipeline that promotes
+    # it. Kargo's Project is cluster-scoped, and the chart creates the project
+    # namespace itself so Kargo adopts it.
+    - group: kargo.akuity.io
+      kind: '*'
 
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -39,66 +43,46 @@ spec:
   goTemplateOptions: [missingkey=error]
 
   generators:
-    # One file per service per environment under k8s/services/. Adding a
-    # service is a new file, not an edit to a list of every service. Same
-    # generator the homelab ApplicationSet uses for k8s/apps/**/config.json.
+    # One entry per repo, and the repo answers for itself. The git generator
+    # reads argocd.yaml out of each listed repo, so what a service is called,
+    # which environment it runs as and which namespace it lands in are the
+    # service's own facts. homelab decides only whether to run it at all.
     #
-    # Each file supplies service, env, repoURL, targetRevision and namespace.
-    # See k8s/services/README.md.
-    #
-    # Rejected: the scmProvider generator, which would need no registry file at
-    # all — point it at the account and filter on pathsExist. Argo CD's GitHub
-    # implementation calls Repositories.ListByOrg with no fallback to
-    # ListByUser, and Fomiller is a personal account, so the call 404s and the
-    # generator finds nothing. Worth revisiting only if the account ever
-    # becomes an organisation.
-    - git:
-        repoURL: https://github.com/Fomiller/homelab.git
-        revision: main
-        requeueAfterSeconds: 20
-        files:
-          # YAML, not JSON, because Kargo rewrites these files on every
-          # promotion and its yaml-update step emits YAML. A .json file would
-          # come back out of a promotion as YAML.
-          - path: k8s/services/*/config.yaml
+    # golden-argocd generates and manages that file, so it is there before a
+    # repo is ever added here.
+    - matrix:
+        generators:
+          - list:
+              elements: []
+              # - repoURL: https://github.com/Fomiller/my-service.git
+              #   targetRevision: main
+          - git:
+              repoURL: '{{ .repoURL }}'
+              revision: '{{ .targetRevision }}'
+              requeueAfterSeconds: 20
+              files:
+                - path: argocd.yaml
 
   template:
     metadata:
-      name: '{{ .service }}-{{ .env }}'
+      name: '{{ .name }}-{{ .env }}'
       namespace: argocd
       labels:
-        app.kubernetes.io/name: '{{ .service }}'
+        app.kubernetes.io/name: '{{ .name }}'
         flake-hub.fomiller.dev/env: '{{ .env }}'
     spec:
       project: services
-      # Two sources, not a kustomize overlay that inflates the chart itself.
+      # A single source, unlike before. The overlay is a kustomization that
+      # inflates the service chart and its Kargo project chart from ECR, which
+      # works because the repo-server has a helm registry credential — see
+      # k8s/apps/cluster-resources.
       #
-      # Argo CD cannot pull a private OCI chart through kustomize's helmCharts:
-      # it hands the kustomize helm invocation a fresh empty HELM_CONFIG_HOME
-      # and never writes registry credentials into it, so the pull fails with
-      # "basic credential not found" however the repository Secret is declared.
-      # A native Helm source with the same credential works, which is this.
-      #
-      # The values still live in the service's repo. The second source exists
-      # only to be referenced as $values — a source carrying `ref` renders
-      # nothing itself.
-      sources:
-        - repoURL: '{{ .registry }}'
-          chart: '{{ .service }}-chart'
-          targetRevision: '{{ .chartVersion }}'
-          helm:
-            valueFiles:
-              - $values/argocd/overlays/values.app.base.yaml
-              - $values/argocd/overlays/{{ .env }}/values.app.yaml
-            # A parameter, not a value file, so it wins over the tag the
-            # service's own overlay carries. Both versions this Application
-            # runs then come from one file that Kargo owns.
-            parameters:
-              - name: image.tag
-                value: '{{ .imageTag }}'
-        - repoURL: '{{ .repoURL }}'
-          targetRevision: '{{ .targetRevision }}'
-          ref: values
+      # Nothing here names a chart version. That lives in the overlay, in the
+      # service's repo, where Kargo writes it.
+      source:
+        repoURL: '{{ .repoURL }}'
+        targetRevision: '{{ .targetRevision }}'
+        path: 'argocd/overlays/{{ .env }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .namespace }}'
@@ -106,15 +90,15 @@ spec:
         automated:
           prune: true
           selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
-        # CreateNamespace=true alone makes a bare namespace. The label is what
-        # the ecr-image-pull ClusterExternalSecret selects on, so without it a
-        # new service's pods have no registry credential and sit in
-        # ImagePullBackOff.
+        # The kubelet needs an ECR credential to pull the image, and that
+        # Secret is per-namespace. Labelling the namespace is what makes the
+        # ClusterExternalSecret write into it, so a new service needs nothing
+        # in cluster-resources.
         managedNamespaceMetadata:
           labels:
             fomiller.dev/ecr-pull: "true"
+        syncOptions:
+          - CreateNamespace=true
 
   # Deleting an entry should take the workloads with it, not leave them
   # running in the cluster with nothing tracking them.
