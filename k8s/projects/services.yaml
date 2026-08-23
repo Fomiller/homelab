@@ -13,6 +13,9 @@ spec:
   # whole cluster.
   sourceRepos:
     - https://github.com/Fomiller/*
+    # The chart itself comes from ECR, not from the repo. Argo CD checks every
+    # source against this list before it tries to pull.
+    - 695434033664.dkr.ecr.us-east-1.amazonaws.com
   destinations:
     - namespace: '*'
       server: https://kubernetes.default.svc
@@ -65,10 +68,28 @@ spec:
         flake-hub.fomiller.dev/env: '{{ .env }}'
     spec:
       project: services
-      source:
-        repoURL: '{{ .repoURL }}'
-        targetRevision: '{{ .targetRevision }}'
-        path: 'argocd/overlays/{{ .env }}'
+      # Two sources, not a kustomize overlay that inflates the chart itself.
+      #
+      # Argo CD cannot pull a private OCI chart through kustomize's helmCharts:
+      # it hands the kustomize helm invocation a fresh empty HELM_CONFIG_HOME
+      # and never writes registry credentials into it, so the pull fails with
+      # "basic credential not found" however the repository Secret is declared.
+      # A native Helm source with the same credential works, which is this.
+      #
+      # The values still live in the service's repo. The second source exists
+      # only to be referenced as $values — a source carrying `ref` renders
+      # nothing itself.
+      sources:
+        - repoURL: '{{ .registry }}'
+          chart: '{{ .service }}-chart'
+          targetRevision: '{{ .chartVersion }}'
+          helm:
+            valueFiles:
+              - $values/argocd/overlays/values.app.base.yaml
+              - $values/argocd/overlays/{{ .env }}/values.app.yaml
+        - repoURL: '{{ .repoURL }}'
+          targetRevision: '{{ .targetRevision }}'
+          ref: values
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .namespace }}'

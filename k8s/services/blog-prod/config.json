@@ -3,5 +3,7 @@
   "env": "prod",
   "repoURL": "https://github.com/Fomiller/blog.git",
   "targetRevision": "main",
+  "registry": "695434033664.dkr.ecr.us-east-1.amazonaws.com",
+  "chartVersion": "0.2.0",
   "namespace": "blog"
 }
