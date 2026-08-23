@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kargo-projects
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: PruneLast=true
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  description: Kargo Projects and their promotion pipelines
+  sourceRepos:
+    - https://github.com/Fomiller/*
+    - 695434033664.dkr.ecr.us-east-1.amazonaws.com
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # The chart creates the project namespace itself, labelled so Kargo adopts it.
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: kargo.akuity.io
+      kind: '*'
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kargo-projects
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  goTemplate: true
+  goTemplateOptions: [missingkey=error]
+
+  generators:
+    # One file per Kargo project, the same shape as k8s/services. A service
+    # that wants a promotion pipeline adds a file; nothing here lists them.
+    - git:
+        repoURL: https://github.com/Fomiller/homelab.git
+        revision: main
+        requeueAfterSeconds: 20
+        files:
+          - path: k8s/kargo/*/config.yaml
+
+  template:
+    metadata:
+      name: 'kargo-{{ .project }}'
+      namespace: argocd
+    spec:
+      project: kargo-projects
+      # Same two-source shape as the services ApplicationSet, and for the same
+      # reason: Argo CD cannot authenticate kustomize against a private OCI
+      # registry, so the chart is a native Helm source and the repo supplies
+      # only values. See k8s/services/README.md.
+      sources:
+        - repoURL: '{{ .registry }}'
+          chart: charts/kargo-project-chart
+          targetRevision: '{{ .chartVersion }}'
+          helm:
+            valueFiles:
+              - $values/kargo/values.yaml
+        - repoURL: '{{ .repoURL }}'
+          targetRevision: '{{ .targetRevision }}'
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=false
+
+  syncPolicy:
+    preserveResourcesOnDeletion: false

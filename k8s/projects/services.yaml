@@ -57,7 +57,10 @@ spec:
         revision: main
         requeueAfterSeconds: 20
         files:
-          - path: k8s/services/*/config.json
+          # YAML, not JSON, because Kargo rewrites these files on every
+          # promotion and its yaml-update step emits YAML. A .json file would
+          # come back out of a promotion as YAML.
+          - path: k8s/services/*/config.yaml
 
   template:
     metadata:
@@ -87,6 +90,12 @@ spec:
             valueFiles:
               - $values/argocd/overlays/values.app.base.yaml
               - $values/argocd/overlays/{{ .env }}/values.app.yaml
+            # A parameter, not a value file, so it wins over the tag the
+            # service's own overlay carries. Both versions this Application
+            # runs then come from one file that Kargo owns.
+            parameters:
+              - name: image.tag
+                value: '{{ .imageTag }}'
         - repoURL: '{{ .repoURL }}'
           targetRevision: '{{ .targetRevision }}'
           ref: values
