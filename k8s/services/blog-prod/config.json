@@ -1,0 +1,7 @@
+{
+  "service": "blog",
+  "env": "prod",
+  "repoURL": "https://github.com/Fomiller/blog.git",
+  "targetRevision": "main",
+  "namespace": "blog"
+}
