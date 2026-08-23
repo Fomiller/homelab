@@ -2,11 +2,6 @@
 # ECR authorization tokens expire every 12 hours, so a static Secret in
 # Secrets Manager is not an option — this has to be minted on a schedule.
 #
-# ClusterGenerator rather than a namespaced ECRAuthorizationToken: the token is
-# needed in argocd (to pull the OCI chart) and in every service namespace (to
-# pull the image). A namespaced generator would mean a copy of this object per
-# namespace, forever.
-#
 # Auth is IRSA, the same web identity the aws-clustersecretstore uses. The role
 # needs ECR read as well as GetAuthorizationToken — ECR authorizes the pull
 # against the identity that minted the token. See
@@ -26,6 +21,116 @@ spec:
             name: external-secrets
             namespace: external-secrets
 ---
+# The token is minted exactly once, here, and every consumer reads this Secret
+# rather than running the generator itself.
+#
+# That indirection is not a preference. A generator's serviceAccountRef is
+# resolved in the *consuming* ExternalSecret's namespace: NewGeneratorSession
+# passes isClusterKind=false, so the `namespace` field above is ignored
+# (pkg/provider/aws/auth/auth.go, credsFromServiceAccount). Running the
+# generator from argocd looked for a ServiceAccount named external-secrets in
+# argocd and failed. Only this namespace has one, so only this namespace can
+# mint.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: ecr-token
+  namespace: external-secrets
+spec:
+  # Well under the 12 hour token lifetime. A pull that starts with a token
+  # minted 11 hours ago should still finish.
+  refreshInterval: 1h
+  target:
+    name: ecr-token
+    creationPolicy: Owner
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ClusterGenerator
+          name: ecr-fomiller
+---
+# Identity the replicating store authenticates as. Deliberately not the
+# external-secrets ServiceAccount: this one may read one Secret and nothing
+# else, so a mistake in a consumer cannot reach the rest of the namespace.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ecr-token-reader
+  namespace: external-secrets
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecr-token-reader
+  namespace: external-secrets
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["ecr-token"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecr-token-reader
+  namespace: external-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ecr-token-reader
+subjects:
+  - kind: ServiceAccount
+    name: ecr-token-reader
+    namespace: external-secrets
+---
+# The kubernetes provider validates a store by asking what it is allowed to do.
+# Without this the store reports NotReady even though the read itself would
+# have worked.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ecr-token-reader-selfcheck
+rules:
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["selfsubjectrulesreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ecr-token-reader-selfcheck
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ecr-token-reader-selfcheck
+subjects:
+  - kind: ServiceAccount
+    name: ecr-token-reader
+    namespace: external-secrets
+---
+# Reads Secrets out of one namespace and serves them to any other. This is what
+# lets a single minted token reach argocd and every service namespace without
+# each of them needing an IRSA ServiceAccount of its own.
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: ecr-token-clustersecretstore
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: external-secrets
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+          namespace: external-secrets
+      auth:
+        serviceAccount:
+          name: ecr-token-reader
+          namespace: external-secrets
+---
 # Argo CD's repo-server pulls the service chart from ECR over OCI. Without
 # this it has no credentials for the registry and the Application fails to
 # render before it ever reaches the cluster.
@@ -39,31 +144,33 @@ metadata:
   name: ecr-argocd-repo-creds
   namespace: argocd
 spec:
-  # Well under the 12 hour token lifetime. A repo-server that starts a pull
-  # with a token minted 11 hours ago should still finish it.
   refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: ecr-token-clustersecretstore
   target:
     name: ecr-argocd-repo-creds
     creationPolicy: Owner
     template:
-      engine: v2
+      engineVersion: v2
       metadata:
         labels:
           argocd.argoproj.io/secret-type: repo-creds
         annotations:
           expiresAt: "{{ .expires_at }}"
       data:
-        url: oci://695434033664.dkr.ecr.us-east-1.amazonaws.com
+        # No oci:// scheme. Argo CD matches a credential against the
+        # Application's repoURL as a prefix, and an OCI repoURL is the bare
+        # registry host — with the scheme on, nothing matches and the pull
+        # fails with "basic credential not found".
+        url: 695434033664.dkr.ecr.us-east-1.amazonaws.com
         type: helm
         enableOCI: "true"
         username: "{{ .username }}"
         password: "{{ .password }}"
   dataFrom:
-    - sourceRef:
-        generatorRef:
-          apiVersion: generators.external-secrets.io/v1alpha1
-          kind: ClusterGenerator
-          name: ecr-fomiller
+    - extract:
+        key: ecr-token
 ---
 # The kubelet's turn: Argo CD renders the chart, then nodes have to pull the
 # image. That credential is per-namespace, and every service gets its own
@@ -84,11 +191,14 @@ spec:
   refreshTime: 1h
   externalSecretSpec:
     refreshInterval: 1h
+    secretStoreRef:
+      kind: ClusterSecretStore
+      name: ecr-token-clustersecretstore
     target:
       name: ecr-image-pull
       creationPolicy: Owner
       template:
-        engine: v2
+        engineVersion: v2
         type: kubernetes.io/dockerconfigjson
         metadata:
           annotations:
@@ -108,8 +218,5 @@ spec:
               }
             }
     dataFrom:
-      - sourceRef:
-          generatorRef:
-            apiVersion: generators.external-secrets.io/v1alpha1
-            kind: ClusterGenerator
-            name: ecr-fomiller
+      - extract:
+          key: ecr-token
