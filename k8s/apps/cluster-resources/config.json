@@ -1,9 +1,9 @@
 {
-  "appName": "ecr-credentials",
-  "userGivenName": "ecr-credentials",
+  "appName": "cluster-resources",
+  "userGivenName": "cluster-resources",
   "destNamespace": "external-secrets",
   "destServer": "https://kubernetes.default.svc",
-  "srcPath": "k8s/apps/ecr-credentials",
+  "srcPath": "k8s/apps/cluster-resources",
   "srcRepoURL": "https://github.com/Fomiller/homelab.git",
   "srcTargetRevision": "main",
   "labels": null,
