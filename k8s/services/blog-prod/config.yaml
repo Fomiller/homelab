@@ -1,0 +1,12 @@
+# Both versions below are written by Kargo, not by hand. See
+# k8s/projects/kargo-projects.yaml and the blog repo's kargo/values.yaml.
+service: blog
+env: prod
+repoURL: https://github.com/Fomiller/blog.git
+targetRevision: main
+registry: 695434033664.dkr.ecr.us-east-1.amazonaws.com
+chartVersion: 0.3.0
+# tag@digest, not a bare tag: the digest makes a deploy reproducible, the tag
+# keeps `kubectl describe` readable. The chart renders repository:<this>.
+imageTag: latest
+namespace: blog

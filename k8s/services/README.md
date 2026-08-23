@@ -1,24 +1,27 @@
 # services
 
-One directory per service per environment. Each holds a single `config.json`,
+One directory per service per environment. Each holds a single `config.yaml`,
 and that file existing is what creates the Argo CD Application — the `services`
-ApplicationSet in `k8s/projects/services.yaml` globs `k8s/services/*/config.json`.
+ApplicationSet in `k8s/projects/services.yaml` globs `k8s/services/*/config.yaml`.
 
 Nothing else registers a service. There is no list to add to.
 
-## config.json
+## config.yaml
 
-```json
-{
-  "service": "blog",
-  "env": "prod",
-  "repoURL": "https://github.com/Fomiller/blog.git",
-  "targetRevision": "main",
-  "registry": "695434033664.dkr.ecr.us-east-1.amazonaws.com",
-  "chartVersion": "0.2.0",
-  "namespace": "blog"
-}
+```yaml
+service: blog
+env: prod
+repoURL: https://github.com/Fomiller/blog.git
+targetRevision: main
+registry: 695434033664.dkr.ecr.us-east-1.amazonaws.com
+chartVersion: 0.3.0
+imageTag: 310133c@sha256:...
+namespace: blog
 ```
+
+YAML rather than JSON because Kargo rewrites this file on every promotion and
+its `yaml-update` step emits YAML. A `.json` file would come back out of a
+promotion as YAML.
 
 Every key is required. The ApplicationSet runs with `missingkey=error`, so a
 missing one fails the generator rather than rendering an Application with an
@@ -31,8 +34,14 @@ empty field.
 | `repoURL` | The service's repo, not this one. Supplies the values files, and nothing else. |
 | `targetRevision` | Branch or tag the values are read from. |
 | `registry` | OCI registry holding the chart. Must appear in the `services` AppProject `sourceRepos`. |
-| `chartVersion` | Chart version to run. **This is the deployed version** — changing it is what releases. |
+| `chartVersion` | Chart version to run. Written by Kargo. |
+| `imageTag` | Image to run, as `tag@digest`. Written by Kargo, and passed as a Helm parameter so it beats the tag in the service's own overlay. |
 | `namespace` | Created by Argo CD if absent, and labelled for the ECR pull secret. |
+
+`chartVersion` and `imageTag` are **the deployed versions**. Kargo owns both —
+see `k8s/kargo/` and the service repo's `kargo/values.yaml`. Editing them by
+hand works and is the way to roll back, but Kargo will move them forward again
+on the next freight.
 
 Directory names are not read. Name them `<service>-<env>` so two environments
 of one service do not collide.
