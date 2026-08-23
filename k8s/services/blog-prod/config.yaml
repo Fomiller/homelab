@@ -8,5 +8,5 @@ registry: 695434033664.dkr.ecr.us-east-1.amazonaws.com
 chartVersion: 0.3.0
 # tag@digest, not a bare tag: the digest makes a deploy reproducible, the tag
 # keeps `kubectl describe` readable. The chart renders repository:<this>.
-imageTag: latest
+imageTag: c35cafa@sha256:cff4894e355951439975dea55b549260039c31688474baa8ce824353e633a492
 namespace: blog
