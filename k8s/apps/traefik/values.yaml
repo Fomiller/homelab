@@ -12,6 +12,24 @@ gateway:
     web:
       namespacePolicy:
         from: All
+
+# Everything public arrives through cloudflared, which sets X-Forwarded-For and
+# X-Forwarded-Proto. With no trustedIPs Traefik discarded both and rebuilt them
+# from the connection it could see, so every app behind the tunnel logged a
+# cloudflared pod as its client and read the always-HTTPS public leg as http.
+# authentik's own brute-force and per-IP rate limiting were counting the whole
+# internet as two addresses.
+#
+# The range is the pod CIDR because cloudflared's pod IPs move with
+# rescheduling and there is nothing stabler to name. That does mean any pod in
+# the cluster can forge these headers to Traefik, which nothing could before —
+# accepted deliberately: every workload here is one we deploy, and losing real
+# client IPs costs more than that.
+ports:
+  web:
+    forwardedHeaders:
+      trustedIPs:
+        - 10.244.0.0/16
 #
 # # Configure Network Ports and EntryPoints
 # # EntryPoints are the network listeners for incoming traffic.
