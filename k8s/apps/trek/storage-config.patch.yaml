@@ -1,0 +1,18 @@
+# The chart has no extraVolumes hook, so the seed file is mounted here. It has
+# to land inside the data volume (TREK reads DATA_ROOT/storage-config.json),
+# which means the subPath mount must come AFTER the PVC's /app/data mount —
+# kubelet mounts in list order, and mounting the parent second would hide it.
+# Hence append ops rather than a strategic merge, which prepends.
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: storage-config
+    mountPath: /app/data/storage-config.json
+    subPath: storage-config.json
+    readOnly: true
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: storage-config
+    secret:
+      secretName: trek-storage-config

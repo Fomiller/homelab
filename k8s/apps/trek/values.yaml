@@ -1,0 +1,62 @@
+image:
+  repository: mauriceboe/trek
+  # Pinned to the chart's appVersion so a sync can't drift ahead of the chart.
+  tag: "4.1.1"
+
+env:
+  NODE_ENV: production
+  PORT: 3000
+  TZ: America/Chicago
+  APP_URL: https://trek.fomiller.com
+  ALLOWED_ORIGINS: https://trek.fomiller.com
+
+  # cloudflared -> traefik, so two hops of X-Forwarded-For to trust.
+  TRUST_PROXY: "2"
+
+  # TLS is terminated at Cloudflare; traefik's `web` entrypoint is plain HTTP.
+  # Turning this on would redirect-loop. Cookies stay secure via NODE_ENV.
+  FORCE_HTTPS: "false"
+
+  # Anything worth integrating (Immich and friends) lives on the cluster's own
+  # private network, which TREK blocks by default.
+  ALLOW_INTERNAL_NETWORK: "true"
+
+  # Google straight through, no authentik in front — TREK takes exactly one
+  # OIDC provider, and this instance is public. Redirect URI to register in
+  # Google Cloud Console (APIs & Services > Credentials > OAuth client, type
+  # "Web application"): https://trek.fomiller.com/api/auth/oidc/callback
+  #
+  # OIDC_ONLY is deliberately left off. It would disable password login too,
+  # so a Google outage or a botched client rotation would lock everyone out of
+  # an instance with no other door. Password *registration* gets switched off
+  # in Admin > Settings instead, which keeps local login as break-glass
+  # without letting strangers self-serve.
+  #
+  # No OIDC_ADMIN_CLAIM/OIDC_ADMIN_VALUE: Google asserts no groups claim, so
+  # role mapping has nothing to read. Promote people in Admin > Users.
+  OIDC_ISSUER: https://accounts.google.com
+  OIDC_CLIENT_ID: 52012222998-acpmm2ampv9jth020iijp21fsg6904us.apps.googleusercontent.com
+  OIDC_DISPLAY_NAME: Google
+
+# ENCRYPTION_KEY and OIDC_CLIENT_SECRET both come from the Doppler-backed
+# trek-secrets Secret (see external-secrets.yaml). Setting this also stops the
+# chart rendering a Secret of its own.
+existingSecret: trek-secrets
+existingSecretKey: ENCRYPTION_KEY
+
+# Sized for a handful of trips, not a media library. The ratio is the part
+# that matters: backups land in data/backups and stage through data/tmp, and a
+# backup ZIP bundles the whole uploads tree, so data has to be the larger of
+# the two. Longhorn expands in place, so start small and grow if it fills.
+persistence:
+  enabled: true
+  data:
+    size: 5Gi
+    storageClassName: longhorn
+  uploads:
+    size: 2Gi
+    storageClassName: longhorn
+
+# Fronted by our own Traefik IngressRoute (ingressroute.yaml).
+ingress:
+  enabled: false

@@ -44,10 +44,16 @@ locals {
   #   published content only, holds no session, and has no admin surface — the
   #   CMS stays at cms.fomiller.com behind Access, and the blog reads it over
   #   the in-cluster Service.
+  # - trek is for people outside the household, who have no Access identity to
+  #   log in with. Behind Access an invite link would 403 before TREK ever saw
+  #   it. Unlike the blog this one holds sessions and has an admin surface, so
+  #   the controls are TREK's own: Google OIDC for login, self-registration
+  #   off, accounts only via admin-issued invite.
   public_hostnames = [
     "authentik.fomiller.com",
     "attic.fomiller.com",
     "blog.fomiller.com",
+    "trek.fomiller.com",
   ]
 
   tunnel_hostnames = concat(local.protected_hostnames, local.public_hostnames)

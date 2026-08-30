@@ -1,0 +1,58 @@
+# TREK's storage backends, seeded declaratively instead of clicked into
+# Admin > Storage. The server reads /app/data/storage-config.json on boot and
+# imports it only when no storage rows exist yet, then ignores the file for
+# good (it says so in the log). So this configures the first boot; every change
+# after that is the admin UI's.
+#
+# A file that fails validation aborts boot on purpose, so the shape here is
+# checked against TREK's own storageConfigSchema, not written from memory.
+#
+# backups-local is built in and stays the source of truth. The mirror copies
+# every backup write out to S3. Nothing points a category at backups-s3
+# directly: a backend can be a mirror replica or a category target, not both.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: trek-storage-config
+  namespace: trek
+spec:
+  refreshInterval: 30s
+  secretStoreRef:
+    name: aws-clustersecretstore
+    kind: ClusterSecretStore
+  target:
+    name: trek-storage-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        storage-config.json: |
+          {
+            "backends": [
+              {
+                "name": "backups-s3",
+                "type": "s3",
+                "options": {
+                  "endpoint": "{{ .endpoint }}",
+                  "bucket": "{{ .bucket }}",
+                  "region": "{{ .region }}",
+                  "accessKeyId": "{{ .accessKeyId }}",
+                  "secretAccessKey": "{{ .secretAccessKey }}"
+                }
+              },
+              {
+                "name": "backups-mirror",
+                "type": "mirror",
+                "options": {
+                  "primary": "backups-local",
+                  "replicas": ["backups-s3"]
+                }
+              }
+            ],
+            "categories": {
+              "backups": "backups-mirror"
+            }
+          }
+  dataFrom:
+    - extract:
+        key: dev/fomiller/homelab/trek-s3-backups

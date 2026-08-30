@@ -1,0 +1,18 @@
+# Traefik routes to trek by Host header, but the hostname only reaches Traefik
+# because it's listed in the tunnel's public_hostnames (infra/units/cloudflare/
+# global/tunnels/_locals.tf). Anything in neither list there gets the tunnel's
+# catch-all 404.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: trek
+  namespace: trek
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`trek.fomiller.com`)
+      kind: Rule
+      services:
+        - name: trek
+          port: 3000
