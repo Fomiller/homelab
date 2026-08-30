@@ -6,7 +6,16 @@ namespace: trek
 resources:
 - namespace.yaml
 - external-secrets.yaml
+- storage-config.yaml
 - ingressroute.yaml
+
+patches:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: trek
+  path: storage-config.patch.yaml
 
 helmCharts:
 - name: trek
