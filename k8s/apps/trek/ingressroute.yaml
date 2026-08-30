@@ -2,31 +2,10 @@
 # because it's listed in the tunnel's public_hostnames (infra/units/cloudflare/
 # global/tunnels/_locals.tf). Anything in neither list there gets the tunnel's
 # catch-all 404.
----
-# Traefik's `web` entrypoint has no forwardedHeaders.trustedIPs, so it discards
-# the X-Forwarded-Proto cloudflared sends and substitutes its own scheme, http.
-# TREK reads that to mean the request wasn't TLS, marks the session cookie as
-# one the browser will drop, and warns "Login won't stick over HTTP" on a site
-# that is only ever reachable over HTTPS.
 #
-# Restating the header here rather than setting COOKIE_SECURE=false, which is
-# what TREK's own banner suggests: this instance is on the public internet, so
-# the session cookie keeps its Secure flag and the server is told the truth
-# instead. Honest because the tunnel is the only way in and its public leg is
-# always HTTPS.
-#
-# The real fix is trustedIPs on the shared entrypoint, which would cover every
-# app behind the tunnel — deliberately left out of scope here.
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: trek-forwarded-proto
-  namespace: trek
-spec:
-  headers:
-    customRequestHeaders:
-      X-Forwarded-Proto: https
----
+# The X-Forwarded-Proto Middleware that used to sit here is gone: the web
+# entrypoint now trusts cloudflared's forwarded headers (k8s/apps/traefik), so
+# TREK reads the real scheme without trek restating it.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -38,9 +17,6 @@ spec:
   routes:
     - match: Host(`trek.fomiller.com`)
       kind: Rule
-      middlewares:
-        - name: trek-forwarded-proto
-          namespace: trek
       services:
         - name: trek
           port: 3000
