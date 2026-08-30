@@ -44,18 +44,17 @@ env:
 existingSecret: trek-secrets
 existingSecretKey: ENCRYPTION_KEY
 
-# data holds more than travel.db: backups land in data/backups and are staged
-# through data/tmp, and a backup ZIP bundles the whole uploads tree. So this
-# needs room for the DB, one ZIP being built, and every retained ZIP — size it
-# well above uploads rather than below it. Longhorn expands in place if the
-# retention window turns out to want more.
+# Sized for a handful of trips, not a media library. The ratio is the part
+# that matters: backups land in data/backups and stage through data/tmp, and a
+# backup ZIP bundles the whole uploads tree, so data has to be the larger of
+# the two. Longhorn expands in place, so start small and grow if it fills.
 persistence:
   enabled: true
   data:
-    size: 20Gi
+    size: 5Gi
     storageClassName: longhorn
   uploads:
-    size: 10Gi
+    size: 2Gi
     storageClassName: longhorn
 
 # Fronted by our own Traefik IngressRoute (ingressroute.yaml).
