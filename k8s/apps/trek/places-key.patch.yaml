@@ -1,0 +1,18 @@
+# The chart wires exactly five secret env vars from existingSecret
+# (ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, OIDC_CLIENT_SECRET,
+# UNSPLASH_ACCESS_KEY) and has no hook for a sixth. PLACES_API_KEY isn't one of
+# them, and it can't go in values.yaml's env: because that renders into a
+# ConfigMap in git.
+#
+# optional: true matches how the chart declares its own five, so the pod still
+# starts if the key is missing from the Secret — TREK just falls back to the
+# copy in app_settings.
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: PLACES_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: trek-secrets
+        key: PLACES_API_KEY
+        optional: true
