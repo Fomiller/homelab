@@ -35,6 +35,12 @@ resource "aws_s3_bucket_versioning" "trek_backups" {
 # Only noncurrent versions expire. Current objects are TREK's to prune (the
 # Backup panel's keep_days), same reasoning as the attic and cnpg buckets —
 # a rule expiring live objects would delete backups TREK still lists.
+#
+# 90 days is the retention target, and this is the knob that sets it. TREK's
+# own keep_days maxes out at 30 and governs the live copy on both sides, since
+# the mirror replicates its prunes. What outlives that is the noncurrent
+# version each replicated delete leaves behind, so the recoverable window is
+# keep_days plus this.
 resource "aws_s3_bucket_lifecycle_configuration" "trek_backups" {
   bucket = aws_s3_bucket.trek_backups.id
 
@@ -45,7 +51,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "trek_backups" {
     filter {}
 
     noncurrent_version_expiration {
-      noncurrent_days = 30
+      noncurrent_days = 90
     }
 
     abort_incomplete_multipart_upload {
