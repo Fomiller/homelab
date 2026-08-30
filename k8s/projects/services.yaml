@@ -56,6 +56,8 @@ spec:
               elements:
                 - repoURL: https://github.com/Fomiller/blog.git
                   targetRevision: main
+                - repoURL: https://github.com/Fomiller/flake-hub-example-service.git
+                  targetRevision: main
           - git:
               repoURL: '{{ .repoURL }}'
               revision: '{{ .targetRevision }}'
