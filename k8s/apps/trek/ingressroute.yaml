@@ -1,0 +1,17 @@
+# trek.fomiller.com is already covered by the *.fomiller.com wildcard DNS
+# record and the tunnel's wildcard ingress (both in infra/units/cloudflare),
+# so exposing trek is a k8s-only change. Traefik routes to it by Host header.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: trek
+  namespace: trek
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`trek.fomiller.com`)
+      kind: Rule
+      services:
+        - name: trek
+          port: 3000
