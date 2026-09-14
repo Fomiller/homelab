@@ -3,6 +3,48 @@
 # that reschedules itself on its own deschedulingInterval (chart default: 5m).
 kind: Deployment
 
-# Chart default deschedulerPolicy already balances on
-# RemovePodsViolatingTopologySpreadConstraint + LowNodeUtilization, which is
-# exactly the even-distribution behavior we want, so it's left untouched.
+# Pinned explicitly instead of relying on the chart's built-in default policy,
+# so a future chart bump can't silently change what gets evicted. This is the
+# same balance/deschedule set the chart ships by default (even distribution
+# via topology spread + node utilization), with one addition: nodeFit: true,
+# so a pod only gets evicted if there's actually another node it could land
+# on - on a small cluster like this, evicting into "Pending forever" is worse
+# than leaving the imbalance alone.
+deschedulerPolicyAPIVersion: "descheduler/v1alpha2"
+deschedulerPolicy:
+  profiles:
+    - name: default
+      pluginConfig:
+        - name: DefaultEvictor
+          args:
+            nodeFit: true
+            # Opt-in gate: without this, descheduler considers every pod in
+            # the cluster fair game. Only pods carrying this label get
+            # evicted by any strategy below - add it to a Deployment's pod
+            # template once you actually want descheduler managing it.
+            labelSelector:
+              matchLabels:
+                descheduler.io/enabled: "true"
+            podProtections:
+              defaultDisabled:
+                - "PodsWithLocalStorage"
+              extraEnabled:
+                - "PodsWithPVC"
+        - name: RemoveDuplicates
+        - name: RemovePodsViolatingTopologySpreadConstraint
+        - name: LowNodeUtilization
+          args:
+            thresholds:
+              cpu: 20
+              memory: 20
+              pods: 20
+            targetThresholds:
+              cpu: 50
+              memory: 50
+              pods: 50
+      plugins:
+        balance:
+          enabled:
+            - RemoveDuplicates
+            - RemovePodsViolatingTopologySpreadConstraint
+            - LowNodeUtilization
