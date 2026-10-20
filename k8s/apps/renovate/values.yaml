@@ -1,0 +1,33 @@
+cronjob:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  # Assigned before export so a failed mint stops the run under set -e.
+  preCommand: |
+    RENOVATE_TOKEN="$(node /opt/renovate/mint-token.js)"
+    export RENOVATE_TOKEN
+
+renovate:
+  existingConfigFile: /opt/renovate/config.json
+
+envFrom:
+  - secretRef:
+      name: renovate-credentials
+
+extraVolumes:
+  - name: renovate-config
+    configMap:
+      name: renovate-config
+
+extraVolumeMounts:
+  - name: renovate-config
+    mountPath: /opt/renovate
+    readOnly: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
