@@ -7,9 +7,23 @@ cronjob:
   preCommand: |
     RENOVATE_TOKEN="$(node /opt/renovate/mint-token.js)"
     export RENOVATE_TOKEN
+    # The installation token is all Renovate needs; keep the App key out of its env.
+    unset GITHUB_APP_PRIVATE_KEY GITHUB_APP_CLIENT_ID GITHUB_APP_INSTALLATION_ID
 
 renovate:
   existingConfigFile: /opt/renovate/config.json
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+# 12021 is the user baked into the renovate image.
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 12021
+  seccompProfile:
+    type: RuntimeDefault
 
 envFrom:
   - secretRef:
