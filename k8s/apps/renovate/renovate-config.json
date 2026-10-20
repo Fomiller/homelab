@@ -1,7 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>Fomiller/renovate-config"],
-  "ignorePresets": ["github>Fomiller/flake-hub//renovate/default"],
   "platform": "github",
   "username": "fomiller-renovate-bot[bot]",
   "gitAuthor": "fomiller-renovate-bot <345368954+fomiller-renovate-bot[bot]@users.noreply.github.com>",
