@@ -7,7 +7,9 @@
   "autodiscover": true,
   "autodiscoverFilter": [
     "Fomiller/flake-hub-example",
-    "Fomiller/flake-hub-example-service"
+    "Fomiller/flake-hub-example-service",
+    "Fomiller/flake-hub-example-service-2",
+    "Fomiller/blog"
   ],
   "onboarding": false,
   "requireConfig": "optional"
