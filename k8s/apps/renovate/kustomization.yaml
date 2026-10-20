@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: renovate
+
+resources:
+- namespace.yaml
+- external-secrets.yaml
+
+configMapGenerator:
+- name: renovate-config
+  files:
+  - config.json=renovate-config.json
+  - mint-token.js
+  options:
+    disableNameSuffixHash: true
+
+helmCharts:
+- name: renovate
+  repo: https://docs.renovatebot.com/helm-charts
+  releaseName: renovate
+  version: 46.371.5
+  namespace: renovate
+  valuesFile: values.yaml
