@@ -7,6 +7,7 @@ resources:
 - namespace.yaml
 - external-secrets.yaml
 
+# Generated from real files so they can be linted and run locally, not edited as YAML strings.
 configMapGenerator:
 - name: renovate-config
   files:
