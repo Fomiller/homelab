@@ -3,12 +3,30 @@ cronjob:
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
-  # Assigned before export so a failed mint stops the run under set -e.
+  # The App key is mounted only here. Renovate gets the minted token and nothing else.
+  initContainers:
+    - name: mint-token
+      # Keep in step with the chart's image tag.
+      image: ghcr.io/renovatebot/renovate:44.171.8
+      command: ["node", "/opt/renovate/mint-token.js", "/var/run/github-app", "/var/run/renovate-token/token"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: renovate-config
+          mountPath: /opt/renovate
+          readOnly: true
+        - name: github-app
+          mountPath: /var/run/github-app
+          readOnly: true
+        - name: renovate-token
+          mountPath: /var/run/renovate-token
+  # Assigned before export so a missing token stops the run under set -e.
   preCommand: |
-    RENOVATE_TOKEN="$(node /opt/renovate/mint-token.js)"
+    RENOVATE_TOKEN="$(cat /var/run/renovate-token/token)"
     export RENOVATE_TOKEN
-    # The installation token is all Renovate needs; keep the App key out of its env.
-    unset GITHUB_APP_PRIVATE_KEY GITHUB_APP_CLIENT_ID GITHUB_APP_INSTALLATION_ID
 
 renovate:
   existingConfigFile: /opt/renovate/config.json
@@ -22,21 +40,30 @@ renovate:
 securityContext:
   runAsNonRoot: true
   runAsUser: 12021
+  # Group-owns the secret volume so 12021 can read the App key files.
+  fsGroup: 12021
   seccompProfile:
     type: RuntimeDefault
-
-envFrom:
-  - secretRef:
-      name: renovate-credentials
 
 extraVolumes:
   - name: renovate-config
     configMap:
       name: renovate-config
+  - name: github-app
+    secret:
+      secretName: renovate-credentials
+      defaultMode: 0440
+  - name: renovate-token
+    emptyDir:
+      medium: Memory
+      sizeLimit: 1Mi
 
 extraVolumeMounts:
   - name: renovate-config
     mountPath: /opt/renovate
+    readOnly: true
+  - name: renovate-token
+    mountPath: /var/run/renovate-token
     readOnly: true
 
 resources:
