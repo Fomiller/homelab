@@ -1,5 +1,5 @@
 cronjob:
-  schedule: "0 * * * *"
+  schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
