@@ -62,6 +62,8 @@ spec:
                   targetRevision: main
                 - repoURL: https://github.com/Fomiller/flake-hub-example-service-2.git
                   targetRevision: main
+                - repoURL: https://github.com/Fomiller/fantasy-rpg.git
+                  targetRevision: main
           - git:
               repoURL: '{{ .repoURL }}'
               revision: '{{ .targetRevision }}'
