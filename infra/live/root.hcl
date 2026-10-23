@@ -45,9 +45,11 @@ locals {
       source  = "cloudflare/cloudflare"
       version = ">=5.0.0"
     }
+    # Pinned to the server's release line in k8s/apps/authentik. A newer
+    # provider expects API fields an older server does not send. Bump both together.
     authentik = {
       source  = "goauthentik/authentik"
-      version = ">=2026.2.0"
+      version = "~> 2026.5.0"
     }
     talos = {
       source  = "siderolabs/talos"
