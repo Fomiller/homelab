@@ -16,6 +16,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/deploy-infra.yaml'
+      - 'infra/live/*.hcl'
       - 'infra/live/dev/**'
       - 'infra/stacks/**'
       - 'infra/units/**'
@@ -26,6 +27,7 @@ on:
       - main
     paths:
       - '.github/workflows/deploy-infra.yaml'
+      - 'infra/live/*.hcl'
       - 'infra/live/dev/**'
       - 'infra/stacks/**'
       - 'infra/units/**'
