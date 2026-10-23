@@ -49,10 +49,16 @@ locals {
   #   it. Unlike the blog this one holds sessions and has an admin surface, so
   #   the controls are TREK's own: Google OIDC for login, self-registration
   #   off, accounts only via admin-issued invite.
+  # - fantasy-rpg is a game server the Godot client connects to over a
+  #   WebSocket. The client cannot do an Access login. The server has no
+  #   accounts yet, so anyone can join a cave. It holds nothing between runs,
+  #   and it only accepts game messages, so the worst case is a stranger
+  #   playing. Put it behind real auth once the game has accounts.
   public_hostnames = [
     "authentik.fomiller.com",
     "attic.fomiller.com",
     "blog.fomiller.com",
+    "fantasy-rpg.fomiller.com",
     "trek.fomiller.com",
   ]
 
