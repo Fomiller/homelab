@@ -17,15 +17,14 @@ deschedulerPolicy:
               - "PodsWithLocalStorage"
               extraEnabled:
               - "PodsWithPVC"
-            # An Agones GameServer pod is one live instance. Evicting it ends
-            # the run for everyone in it, and Agones makes a new GameServer
-            # rather than moving the old one.
+            # A pod opts out by setting descheduler.fomiller.dev/evict: "false",
+            # so homelab never has to know about the app.
             labelSelector:
               matchExpressions:
-                - key: agones.dev/role
+                - key: descheduler.fomiller.dev/evict
                   operator: NotIn
                   values:
-                    - gameserver
+                    - "false"
         - name: RemoveDuplicates
         - name: RemovePodsHavingTooManyRestarts
           args:
