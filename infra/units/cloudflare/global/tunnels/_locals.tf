@@ -26,6 +26,7 @@ locals {
     "wiki.fomiller.com",
     "kargo.fomiller.com",
     "cms.fomiller.com",
+    "redpanda-frpg-dev.fomiller.com",
   ]
 
   # Reachable without an Access session. Both are deliberate and neither can
