@@ -8,9 +8,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "-2"
 spec:
   description: Micro-services deployed from their own repos
-  # Narrower than the homelab project on purpose. These applications point at
-  # repos outside this one, so the blast radius of a bad one should not be the
-  # whole cluster.
+  # Narrower than the homelab project only in the repos it accepts: Fomiller
+  # repos and the ECR chart registry.
   sourceRepos:
     - https://github.com/Fomiller/*
     - 695434033664.dkr.ecr.us-east-1.amazonaws.com
@@ -20,14 +19,10 @@ spec:
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'
+  # A service repo owns its cluster-scoped resources too, such as its Kargo
+  # Project or the Agones CRDs. An empty list would deny every cluster kind.
   clusterResourceWhitelist:
-    - group: ''
-      kind: Namespace
-    # A service's overlay inflates its Kargo project chart alongside its own,
-    # so one Application creates the workload and the pipeline that promotes
-    # it. Kargo's Project is cluster-scoped, and the chart creates the project
-    # namespace itself so Kargo adopts it.
-    - group: kargo.akuity.io
+    - group: '*'
       kind: '*'
 
 ---
