@@ -1,0 +1,11 @@
+{
+  "appName": "agones",
+  "userGivenName": "agones",
+  "destNamespace": "agones-system",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "argocd/agones",
+  "srcRepoURL": "https://github.com/Fomiller/fantasy-rpg.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}
