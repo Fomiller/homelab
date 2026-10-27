@@ -129,6 +129,9 @@ resource "aws_iam_role" "cnpg_backup_irsa" {
             "${var.s3_bucket_name_homelab_oidc}.s3.${data.aws_region.current.region}.amazonaws.com:sub": [
               "system:serviceaccount:attic:attic-db-cnpg",
               "system:serviceaccount:directus:directus-db-cnpg",
+              "system:serviceaccount:fantasy-rpg:fantasy-rpg-db",
+              # The restore Cluster from fantasy-rpg's persistence runbook.
+              "system:serviceaccount:fantasy-rpg:fantasy-rpg-db-restore",
             ]
           }
         }
