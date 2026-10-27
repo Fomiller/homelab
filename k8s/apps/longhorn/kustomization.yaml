@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - ingressroute.yaml
+- storageclass-single-replica.yaml
 
 namespace: longhorn-system
 
