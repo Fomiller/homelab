@@ -1,0 +1,77 @@
+// Each DaemonSet pod only tails pods on its own node.
+discovery.kubernetes "pods" {
+	role = "pod"
+
+	selectors {
+		role  = "pod"
+		field = "spec.nodeName=" + sys.env("HOSTNAME")
+	}
+}
+
+discovery.relabel "pods" {
+	targets = discovery.kubernetes.pods.targets
+
+	rule {
+		source_labels = ["__meta_kubernetes_namespace"]
+		target_label  = "namespace"
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_name"]
+		target_label  = "pod"
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_container_name"]
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_node_name"]
+		target_label  = "node"
+	}
+
+	// Prefer app.kubernetes.io/name, fall back to the plain app label.
+	rule {
+		source_labels = [
+			"__meta_kubernetes_pod_label_app_kubernetes_io_name",
+			"__meta_kubernetes_pod_label_app",
+		]
+		separator    = ";"
+		regex        = "^;*([^;]+)(;.*)?$"
+		target_label = "app"
+	}
+}
+
+loki.source.kubernetes "pods" {
+	targets    = discovery.relabel.pods.output
+	forward_to = [loki.process.pods.receiver]
+}
+
+loki.process "pods" {
+	forward_to = [loki.write.default.receiver]
+
+	stage.match {
+		selector = `{namespace=~".+"} |~ "^\\s*\\{"`
+
+		stage.json {
+			expressions = {
+				level = "",
+			}
+		}
+
+		stage.labels {
+			values = {
+				level = "",
+			}
+		}
+	}
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+		// auth_enabled is on in Loki. Same tenant loki-canary writes to.
+		tenant_id = "self-monitoring"
+	}
+}

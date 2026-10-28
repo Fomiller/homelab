@@ -1,0 +1,11 @@
+{
+  "appName": "alloy",
+  "userGivenName": "alloy",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "k8s/apps/alloy",
+  "srcRepoURL": "https://github.com/Fomiller/homelab.git",
+  "srcTargetRevision": "main",
+  "labels": null,
+  "annotations": null
+}

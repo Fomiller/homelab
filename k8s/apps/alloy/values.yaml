@@ -1,0 +1,14 @@
+alloy:
+  configMap:
+    create: false
+    name: alloy-config
+    key: config.alloy
+
+controller:
+  type: daemonset
+  # Log agent has to land on every node, tainted or not.
+  tolerations:
+    - operator: Exists
+
+crds:
+  create: false
